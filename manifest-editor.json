@@ -1,0 +1,16 @@
+{
+  "name": "CCE Editor",
+  "short_name": "CCE Editor",
+  "description": "Éditeur de grilles d'accords, notation et paroles pour musiciens.",
+  "start_url": "./chord-chart-editor-MKII-24.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f2efe8",
+  "theme_color": "#1a2e52",
+  "icons": [
+    { "src": "icon-editor-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-editor-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-editor-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
