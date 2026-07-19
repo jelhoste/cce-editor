@@ -4,7 +4,7 @@
 // installé l'app continueront de voir l'ancienne version en cache.
 const CACHE_VERSION = 'cce-editor-v1';
 const PRECACHE_URLS = [
-  './chord-chart-editor-MKII-24.html',
+  './index.html',
   './manifest-editor.json',
   './icon-editor-192.png',
   './icon-editor-512.png',
