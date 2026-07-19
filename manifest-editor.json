@@ -2,7 +2,7 @@
   "name": "CCE Editor",
   "short_name": "CCE Editor",
   "description": "Éditeur de grilles d'accords, notation et paroles pour musiciens.",
-  "start_url": "./chord-chart-editor-MKII-24.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
