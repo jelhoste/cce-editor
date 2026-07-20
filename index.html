@@ -1600,6 +1600,7 @@ ${p}
     <div class="dd-sep"></div>
     <div class="dd-item" onclick="openTemplates();closeMenu()">🎼 Nouveau depuis un modèle</div>
     <div class="dd-item" onclick="openSetlistModal();closeMenu()">🎵 Setlists</div>
+    <div class="dd-item" id="dd-setlist-update" onclick="setlistUpdateLoadedTrack();closeMenu()" style="display:none">💾 Mettre à jour dans la setlist</div>
     <div class="dd-sep"></div>
     <div class="dd-item" onclick="exportJSON();closeMenu()">⬇ Exporter fichier .json</div>
     <div class="dd-item" onclick="importJSON();closeMenu()">⬆ Importer fichier .json</div>
@@ -3654,9 +3655,10 @@ ${p}
       <button class="tbtn" onclick="setlistAddFromFile()" style="font-size:.58rem" title="Ajouter depuis un fichier .cce.json">+ Fichier</button>
     </div>
     <div id="setlist-tracks" style="overflow-y:auto;flex:1;padding:.5rem .7rem;display:flex;flex-direction:column;gap:.3rem"></div>
-    <div style="display:flex;gap:.5rem;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0">
+    <div style="display:flex;gap:.5rem;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap">
       <button class="tbtn" onclick="setlistSave()" style="font-size:.62rem;background:var(--accent);color:var(--acfg);border-color:var(--accent)">💾 Sauvegarder</button>
       <button class="tbtn" onclick="setlistExport()" style="font-size:.62rem">⬇ Exporter .json</button>
+      <button class="tbtn" onclick="printSetlist()" style="font-size:.62rem" title="Imprime tous les morceaux de la setlist en un seul PDF">🖨 Imprimer tout</button>
       <button class="tbtn" onclick="closeSetlistEditor()" style="margin-left:auto;font-size:.62rem">✕ Fermer</button>
     </div>
   </div>
@@ -5974,6 +5976,15 @@ function openFBPanelForDiagOnly(sec, v){
 }
 const SETLIST_PREFIX='cce-setlist-';
 let _setlistCurrent=null;
+// Mémorise depuis quelle setlist/piste le morceau actuellement ouvert a été
+// chargé (via setlistLoadTrack), pour permettre d'y ré-enregistrer les
+// modifications ensuite. null si le morceau courant ne vient pas d'une
+// setlist (ou si le lien n'est plus fiable, ex: fichier importé entre-temps).
+let _loadedFromSetlist=null;
+function _syncSetlistUpdateMenuItem(){
+  const it=document.getElementById('dd-setlist-update');
+  if(it) it.style.display=_loadedFromSetlist?'':'none';
+}
 
 function openSetlistModal(){
   closeAllPanels();
@@ -6186,7 +6197,33 @@ function setlistLoadTrack(i){
   if(!_setlistCurrent) return;
   const track=_setlistCurrent.tracks[i]; if(!track) return;
   if(!confirm(`Ouvrir "${track.title}" dans l'éditeur ?`)) return;
+  _loadedFromSetlist={setlistId:_setlistCurrent.id,trackIndex:i};
   _restoreData(track.data); closeSetlistEditor(); _showSaveStatus('✓ "'+track.title+'" ouvert');
+  _syncSetlistUpdateMenuItem();
+}
+
+// Réenregistre le morceau actuellement ouvert dans la piste de setlist
+// dont il provient (voir _loadedFromSetlist, posé par setlistLoadTrack).
+function setlistUpdateLoadedTrack(){
+  if(!_loadedFromSetlist){
+    alert('Ce morceau n\'a pas été ouvert depuis une setlist — rien à mettre à jour.');
+    return;
+  }
+  let sl;
+  try{ sl=JSON.parse(localStorage.getItem(SETLIST_PREFIX+_loadedFromSetlist.setlistId)); }catch(e){ sl=null; }
+  if(!sl || !Array.isArray(sl.tracks) || !sl.tracks[_loadedFromSetlist.trackIndex]){
+    alert('Setlist introuvable (peut-être supprimée, ou jamais sauvegardée) — impossible de mettre à jour.\nTu peux la retrouver dans le menu Setlists et y ajouter ce morceau manuellement.');
+    _loadedFromSetlist=null; _syncSetlistUpdateMenuItem();
+    return;
+  }
+  const oldTitle=sl.tracks[_loadedFromSetlist.trackIndex].title||'ce morceau';
+  const newTitle=state.song?.title||'Sans titre';
+  if(!confirm(`Remplacer "${oldTitle}" par la version actuelle ("${newTitle}") dans la setlist "${sl.name||'?'}" ?`)) return;
+  sl.tracks[_loadedFromSetlist.trackIndex]={title:newTitle,data:_buildSaveData()};
+  sl.savedAt=Date.now();
+  localStorage.setItem(SETLIST_PREFIX+_loadedFromSetlist.setlistId,JSON.stringify(sl));
+  if(_setlistCurrent && _setlistCurrent.id===sl.id){ _setlistCurrent=sl; renderSetlistTracks(); }
+  _showSaveStatus('✓ Mis à jour dans la setlist "'+(sl.name||'?')+'"');
 }
 function setlistSave(){
   if(!_setlistCurrent) return;
@@ -6204,6 +6241,75 @@ function _doSetlistExport(sl){
   a.href=url; a.download=(sl.name||'setlist').replace(/\s+/g,'-').toLowerCase()+'.cce-setlist.json';
   a.click(); URL.revokeObjectURL(url); _showSaveStatus('✓ Setlist exportée');
 }
+
+// Imprime tous les morceaux d'une setlist en un seul PDF (une seule boîte de
+// dialogue d'impression, morceaux à la suite dans l'ordre de la setlist).
+//
+// Principe : pour chaque morceau, on charge ses données (sur une COPIE
+// profonde — jamais l'objet original de la setlist, pour ne jamais le
+// muter), on relance reflow() comme à l'impression normale d'un seul
+// morceau, puis on capture le HTML déjà mis en page de #canvas-area avant
+// de passer au morceau suivant. Une fois tous les morceaux traités, on
+// concatène tous ces HTML dans #canvas-area et on imprime une seule fois.
+// L'éditeur est ensuite restauré exactement dans l'état où l'utilisateur
+// l'avait laissé (son morceau courant, non sauvegardé y compris).
+async function printSetlist(){
+  if(!_setlistCurrent || !_setlistCurrent.tracks || !_setlistCurrent.tracks.length){
+    alert('Cette setlist est vide — ajoute au moins un morceau avant d\'imprimer.');
+    return;
+  }
+  if(!confirm(`Imprimer les ${_setlistCurrent.tracks.length} morceaux de "${_setlistCurrent.name||'cette setlist'}" en un seul PDF ?`)) return;
+
+  const _nextFrame=()=>new Promise(r=>requestAnimationFrame(r));
+  const canvasEl=document.getElementById('canvas-area');
+  // Sauvegarde complète de l'état actuel de l'éditeur (morceau en cours,
+  // même non sauvegardé) pour le restaurer une fois l'impression terminée.
+  const _backup=_buildSaveData();
+  let _restored=false;
+  const _restoreEditor=()=>{
+    if(_restored) return;
+    _restored=true;
+    _restoreData(JSON.parse(JSON.stringify(_backup)));
+    reflow();
+    window.removeEventListener('afterprint',_restoreEditor);
+  };
+
+  try{
+    const pagesHTML=[];
+    for(const track of _setlistCurrent.tracks){
+      // Clone profond : _restoreData()/reflow() ne doivent jamais pouvoir
+      // muter les données originales du morceau stockées dans la setlist.
+      const trackData=JSON.parse(JSON.stringify(track.data));
+      _restoreData(trackData);
+      try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){ /* API non supportée */ }
+      await _nextFrame(); await _nextFrame();
+      const cv=currentVersionId?versions.find(v=>v.id===currentVersionId):null;
+      if(cv?.type!=='lyrics') reflow();
+      await _nextFrame(); await _nextFrame();
+      pagesHTML.push(canvasEl?canvasEl.innerHTML:'');
+    }
+
+    if(canvasEl) canvasEl.innerHTML=pagesHTML.join('');
+    updatePrintStylesheet();
+    // Préchauffage : force le navigateur à peindre toutes les pages de tous
+    // les morceaux avant impression (même correctif que dans doPrint()).
+    if(canvasEl){
+      const _prevScrollTop=canvasEl.scrollTop;
+      canvasEl.scrollTop=canvasEl.scrollHeight;
+      await _nextFrame(); await _nextFrame();
+      canvasEl.scrollTop=_prevScrollTop;
+      await _nextFrame();
+    }
+    window.print();
+  }catch(e){
+    console.error('[printSetlist] échec :',e);
+    alert('Erreur pendant la préparation de l\'impression de la setlist : '+e.message);
+  }
+
+  window.addEventListener('afterprint',_restoreEditor);
+  setTimeout(_restoreEditor,20000);
+}
+
 function setlistDelete(key){
   try{ const sl=JSON.parse(localStorage.getItem(key)||'{}');
     if(!confirm(`Supprimer "${sl.name||'?'}" ?`)) return;
