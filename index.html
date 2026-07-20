@@ -282,7 +282,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--ink);
   position:fixed;top:0;left:0;width:230px;
   background:var(--modal-bg);border:1px solid var(--rule2);
   border-radius:0 0 6px 0;box-shadow:0 8px 24px rgba(0,0,0,.22);
-  z-index:400;display:none;transform:translateY(0);
+  z-index:2400;display:none;transform:translateY(0);
 }
 #dropdown.open{display:block}
 .dd-sec{padding:.25rem 0;border-bottom:1px solid var(--rule)}
@@ -708,13 +708,14 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--ink);
   font-weight:var(--typo-chord-weight);white-space:nowrap;color:var(--ink);
   user-select:none;line-height:1;
   display:inline-flex;align-items:stretch;
+  letter-spacing:var(--chord-letter-spacing,-0.06em);
   position:relative;z-index:7; /* au-dessus des barres de reprise (z-index:6), qui pouvaient masquer un accord long */
   transform:scaleX(calc(var(--slot-scale-x,1) * var(--chord-fit-x,1)));
   transform-origin:left center;}
 .chord-text .accid{
   font-size:calc(var(--chord-auto-size) * var(--chord-accid-scale));
   color:color-mix(in srgb,var(--ink) 70%,var(--ink2));
-  margin-left:-0.02em;
+  margin-left:var(--chord-accid-gap,-0.02em);
   letter-spacing:0;
   align-self:flex-end;
   margin-bottom:0;
@@ -755,7 +756,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--ink);
   color:var(--bass-c,var(--accent));
   letter-spacing:-0.12em;
   padding-left:0;
-  margin-left:-0.15em;
+  margin-left:calc(-0.15em + var(--chord-bass-vx,0em));
   margin-top:var(--chord-bass-vy,0em);
 }
 
@@ -789,7 +790,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--ink);
 .chord-cell.entry-active .chord-text{opacity:.25}/* fade existing chord */
 #entry-input{
   position:fixed;
-  z-index:800;
+  z-index:2800;
   display:none; /* hidden until entry mode activated */
   font-family:var(--typo-chord-family);
   font-size:var(--chord-auto-size);
@@ -877,7 +878,7 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--ink);
 /* Boutons topbar masqués — remplacés par le menu contextuel mesure */
 #btn-ctx-hide{display:none!important}
 .ctx-hidden{display:none!important}
-#ctx-menu{position:fixed;z-index:800;background:var(--modal-bg);border:1px solid var(--rule2);
+#ctx-menu{position:fixed;z-index:2800;background:var(--modal-bg);border:1px solid var(--rule2);
   border-radius:calc(var(--r)*1.5);box-shadow:0 6px 24px rgba(0,0,0,.22);
   min-width:180px;max-width:240px;padding:4px 0;display:none;user-select:none}
 #ctx-menu.visible{display:block}
@@ -953,7 +954,7 @@ textarea.fi{resize:vertical;min-height:40px}
 
 /* ── Typo panel (flottant, pas de backdrop) ─────────── */
 #typo-panel{
-  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  position:fixed;bottom:0;left:0;right:0;z-index:2300;
   background:var(--modal-bg);border-top:2px solid var(--rule2);
   box-shadow:0 -4px 24px rgba(0,0,0,.18);
   padding:0;
@@ -1075,7 +1076,7 @@ textarea.fi{resize:vertical;min-height:40px}
 
 /* Chord popup */
 #chord-popup{
-  position:fixed;bottom:0;left:0;right:0;z-index:600;
+  position:fixed;bottom:0;left:0;right:0;z-index:2600;
   background:var(--modal-bg);
   border-top:2px solid var(--rule2);
   box-shadow:0 -4px 24px rgba(0,0,0,.18);
@@ -1121,6 +1122,7 @@ textarea.fi{resize:vertical;min-height:40px}
   #topbar,#dropdown,.page-ctrl,.row-ctrl,.no-print,#pedline-modal,
   #typo-panel,#sym-panel,#annot-panel,#sec-panel,
   #chord-popup,#sec-editor,#quick-modal,#notation-panel,#freeblock-panel,#version-panel,
+  #mso-panel,#spacer-panel,#diagband-panel,#grilles-modal,#setlist-modal,#templates-modal,#row-mpr-panel,
   .modal-backdrop,.app-modal,#lyrics-panel{display:none!important}
   #canvas-area{display:block!important;padding:0!important;margin:0!important;
     background:white!important;overflow:visible!important}
@@ -2499,7 +2501,7 @@ ${p}
 
 <!-- ══ SYM EDITOR ═════════════════════════════════════════ -->
 <!-- ══ SYM EDITOR PANEL (flottant bas) ═══════════════════ -->
-<div id="sym-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="sym-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);
   box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:4px;padding:.3rem .5rem;
@@ -2549,7 +2551,7 @@ ${p}
 </div>
 
 <!-- ══ ANNOTATION PANEL (flottant bas) ═══════════════════ -->
-<div id="annot-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="annot-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:4px;padding:.3rem .5rem;border-bottom:1px solid var(--rule);background:var(--ui);flex-wrap:wrap;">
     <span style="font-family:var(--font-mono);font-size:.58rem;font-weight:600;color:var(--ink2);margin-right:.3rem">Annotation</span>
@@ -2591,7 +2593,7 @@ ${p}
 </div>
 
 <!-- ══ SECTION PANEL (flottant bas) ══════════════════════ -->
-<div id="sec-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="sec-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:4px;padding:.3rem .5rem;border-bottom:1px solid var(--rule);background:var(--ui);flex-wrap:wrap;">
     <span style="font-family:var(--font-mono);font-size:.58rem;font-weight:600;color:var(--ink2);margin-right:.3rem">Section</span>
@@ -2639,7 +2641,7 @@ ${p}
 
 <!-- ══ VOLTA MODAL ══════════════════════════════════════ -->
 <!-- ══ CUSTOM SECTION PANEL ═══════════════════════════════ -->
-<div id="custom-sec-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="custom-sec-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem;flex-wrap:wrap">
     <span style="font-family:var(--font-mono);font-size:.58rem;font-weight:600;color:var(--ink2)">§ Section libre</span>
@@ -2652,7 +2654,7 @@ ${p}
 </div>
 
 <!-- ══ ROW MPR PANEL (nombre de mesures par ligne) ═══════════ -->
-<div id="row-mpr-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="row-mpr-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:.6rem;padding:.6rem .7rem;flex-wrap:wrap">
     <span style="font-family:var(--font-mono);font-size:.58rem;font-weight:600;color:var(--ink2)">Mesures sur cette ligne</span>
@@ -2669,7 +2671,7 @@ ${p}
 </div>
 
 <!-- ══ CUSTOM TS PANEL ════════════════════════════════════ -->
-<div id="custom-ts-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="custom-ts-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem;flex-wrap:wrap">
     <span style="font-family:var(--font-mono);font-size:.58rem;font-weight:600;color:var(--ink2)">Métrique libre</span>
@@ -2688,7 +2690,7 @@ ${p}
 </div>
 
 <!-- ══ CUSTOM SYM PANEL ═══════════════════════════════════ -->
-<div id="custom-sym-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="custom-sym-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem;flex-wrap:wrap">
     <span style="font-family:var(--font-mono);font-size:.58rem;font-weight:600;color:var(--ink2)">Symbole libre</span>
@@ -2701,7 +2703,7 @@ ${p}
 </div>
 
 <!-- ══ NOTATION PANEL ════════════════════════════════════ -->
-<div id="notation-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="notation-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);
   max-height:75vh;overflow-y:auto;">
   <!-- Barre de tabs -->
@@ -3347,7 +3349,7 @@ ${p}
   </div>
 </div>
 <!-- ══ MEASURE STYLE OVERRIDE PANEL ══════════════════════ -->
-<div id="mso-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:620;
+<div id="mso-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2620;
   background:var(--modal-bg);border-top:2px solid var(--accent2);box-shadow:0 -4px 24px rgba(0,0,0,.2);
   max-height:70vh;overflow-y:auto;">
   <div style="display:flex;align-items:center;gap:.5rem;padding:.3rem .7rem;
@@ -3394,6 +3396,12 @@ ${p}
         <input type="number" class="fi" id="mso-bass-vy" value="" min="-0.5" max="0.5" step="0.01" placeholder="global" oninput="applyMSO()">
         <button class="step-btn right" onclick="stepVal('mso-bass-vy',0.02,applyMSO)">+</button>
       </div></div>
+    <div class="fg"><label class="fl">Décalage horizontal basse (em)</label>
+      <div class="stepper">
+        <button class="step-btn left" onclick="stepVal('mso-bass-vx',-0.02,applyMSO)">−</button>
+        <input type="number" class="fi" id="mso-bass-vx" value="" min="-0.5" max="0.5" step="0.01" placeholder="global" oninput="applyMSO()">
+        <button class="step-btn right" onclick="stepVal('mso-bass-vx',0.02,applyMSO)">+</button>
+      </div></div>
   </div>
   <div style="padding:.4rem .8rem .6rem;border-top:1px solid var(--rule)">
     <div style="font-family:var(--font-mono);font-size:.58rem;font-weight:600;color:var(--accent2);margin-bottom:.4rem">Largeur des slots (%)</div>
@@ -3408,7 +3416,7 @@ ${p}
 </div>
 
 <!-- ══ PEDLINE MODAL ════════════════════════════════════ -->
-<div id="pedline-modal" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="pedline-modal" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--rule2);box-shadow:0 -4px 24px rgba(0,0,0,.18);">
   <div style="display:flex;align-items:center;gap:6px;padding:.3rem .5rem;
     border-bottom:1px solid var(--rule);background:var(--ui);flex-wrap:wrap;">
@@ -3655,7 +3663,7 @@ ${p}
 </div>
 
 <!-- ══ SPACER EDITOR PANEL ════════════════════════════════ -->
-<div id="spacer-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="spacer-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--ink3);box-shadow:0 -4px 24px rgba(0,0,0,.2);
   max-height:85vh;overflow-y:auto;">
   <div style="display:flex;align-items:center;gap:.4rem;padding:.3rem .7rem;flex-wrap:wrap;
@@ -3686,7 +3694,7 @@ ${p}
 </div>
 
 <!-- ══ TEMPLATES MODAL ═══════════════════════════════════ -->
-<div id="templates-modal" style="display:none;position:fixed;inset:0;z-index:900;
+<div id="templates-modal" style="display:none;position:fixed;inset:0;z-index:2900;
   background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center">
   <div style="background:var(--modal-bg);border-radius:calc(var(--r)*2);box-shadow:0 8px 40px rgba(0,0,0,.3);
     width:min(480px,95vw);max-height:85vh;overflow-y:auto;padding:1rem 1.2rem">
@@ -3732,7 +3740,7 @@ ${p}
   </div>
 </div>
 
-<div id="freeblock-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:900;
+<div id="freeblock-panel" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:2900;
   background:var(--modal-bg);border-top:2px solid var(--accent);box-shadow:0 -4px 32px rgba(0,0,0,.22);
   max-height:85vh;overflow-y:auto;">
   <!-- Barre titre -->
@@ -4117,6 +4125,7 @@ function openMSOPanel(){
   set('mso-accid-scale', o.accidScale!=null?o.accidScale:'');
   set('mso-accid-gap', o.accidGap!=null?o.accidGap:'');
   set('mso-bass-vy', o.bassVY!=null?o.bassVY:'');
+  set('mso-bass-vx', o.bassVX!=null?o.bassVX:'');
   // Générer les steppers de largeur par slot
   // Générer les boutons de patterns rythmiques
   const patternsRow=document.getElementById('mso-patterns-row');
@@ -4193,6 +4202,7 @@ function applyMSO(){
   const as=get('mso-accid-scale'); if(as!=null) o.accidScale=as;
   const ag=get('mso-accid-gap'); if(ag!=null) o.accidGap=ag;
   const bvy=get('mso-bass-vy'); if(bvy!=null) o.bassVY=bvy;
+  const bvx=get('mso-bass-vx'); if(bvx!=null) o.bassVX=bvx;
   m.styleOverride=Object.keys(o).length?o:null;
   reflow();
 }
@@ -4201,7 +4211,7 @@ function msoReset(){
   state.measures[sel].styleOverride=null;
   state.measures[sel].slotWidths=null;
   document.getElementById('mso-size').value=100;
-  ['mso-offset-x','mso-ls','mso-accid-scale','mso-accid-gap','mso-bass-vy'].forEach(id=>{
+  ['mso-offset-x','mso-ls','mso-accid-scale','mso-accid-gap','mso-bass-vy','mso-bass-vx'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   reflow();
@@ -4235,8 +4245,10 @@ async function doPrint(){
   // Laisser le navigateur peindre avec les bonnes polices avant de relire
   // les hauteurs réelles (un seul rAF suffit rarement à garantir la peinture
   // complète, deux frames imbriquées sont plus sûres).
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
+  const _nextFrame=()=>new Promise(r=>requestAnimationFrame(r));
+  await _nextFrame();
+  await _nextFrame();
+  {
       // La version paroles calcule sa pagination différemment (mesure JS de
       // hauteur de ligne, sans lien avec la taille automatique des accords
       // visée par ce correctif) — la refaire juste avant l'impression peut
@@ -4245,6 +4257,21 @@ async function doPrint(){
       const cv=currentVersionId?versions.find(v=>v.id===currentVersionId):null;
       if(cv?.type!=='lyrics'){
         reflow(); // recalcule la pagination avec des mesures désormais fiables
+      }
+      // Certains navigateurs ne peignent complètement que ce qui a déjà été
+      // visible à l'écran : une page jamais scrollée peut être capturée à
+      // moitié peinte lors du tout premier aperçu d'impression (symptôme
+      // observé : un point d'orgue coupé en deux), alors qu'un second essai,
+      // déjà peint, s'affiche correctement sans qu'aucun code ne change.
+      // On force donc un passage complet de la zone avant d'imprimer.
+      const canvasEl=document.getElementById('canvas-area');
+      if(canvasEl){
+        const _prevScrollTop=canvasEl.scrollTop;
+        canvasEl.scrollTop=canvasEl.scrollHeight;
+        await _nextFrame();
+        await _nextFrame();
+        canvasEl.scrollTop=_prevScrollTop;
+        await _nextFrame();
       }
       // Retrait complet (pas juste masqué en CSS) du bouton "+ Ajouter une
       // ligne" sous la page — même masqué, un élément peut encore occuper
@@ -4270,9 +4297,51 @@ async function doPrint(){
       };
       window.addEventListener('afterprint',restoreAddBtn);
       setTimeout(restoreAddBtn,15000);
-    });
-  });
+  }
 }
+
+// ════ DEBUG — diagnostic de la page vide à l'impression ════════
+// N'est JAMAIS appelée automatiquement : outil manuel, à lancer depuis la
+// console DevTools. Ne modifie rien à la page — lecture seule.
+//
+// Mode d'emploi :
+//  1. F12 pour ouvrir DevTools
+//  2. Ctrl+Shift+P (ou Cmd+Shift+P sur Mac) → taper "rendering" → ouvrir
+//     "Show Rendering"
+//  3. Dans le panneau Rendering, cocher "Emulate CSS media type" et
+//     choisir "print" — la page prend alors EXACTEMENT l'apparence de
+//     l'impression, en direct à l'écran, sans ouvrir de boîte de dialogue.
+//  4. Dans la console, taper : debugPrintScan()
+//  5. La console affiche un tableau trié par position basse : l'élément
+//     en tête de liste (le plus bas) est le suspect n°1 pour la page vide.
+window.debugPrintScan=function(){
+  const out=[];
+  const walk=(el)=>{
+    if(!(el instanceof Element)) return;
+    let cs, r;
+    try{ cs=getComputedStyle(el); r=el.getBoundingClientRect(); }catch(e){ return; }
+    if(cs.display!=='none' && r.height>0.5){
+      out.push({
+        tag:el.tagName.toLowerCase(),
+        id:el.id||'',
+        cls:(el.className&&el.className.toString&&el.className.toString())||'',
+        top:Math.round(r.top),
+        bottom:Math.round(r.bottom),
+        height:Math.round(r.height),
+        position:cs.position
+      });
+    }
+    for(const child of el.children) walk(child);
+  };
+  walk(document.body);
+  out.sort((a,b)=>b.bottom-a.bottom);
+  console.log('[debugPrintScan] '+out.length+' éléments visibles — triés du plus bas au moins bas :');
+  console.table(out.slice(0,40));
+  if(!window.matchMedia('print').matches){
+    console.warn('[debugPrintScan] "Emulate CSS media type: print" ne semble pas actif — active-le dans DevTools > Rendering pour un diagnostic fiable, sinon ce scan reflète l\'écran normal, pas l\'impression.');
+  }
+  return out;
+};
 
 function updatePrintStylesheet(){
   const correct=document.getElementById('ty-print-correct')?.checked!==false;
@@ -4413,7 +4482,7 @@ function _showMultiBar(){
   let bar=document.getElementById('multi-bar');
   if(!bar){
     bar=document.createElement('div'); bar.id='multi-bar';
-    bar.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:800;
+    bar.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:2800;
       background:var(--accent);color:var(--acfg);
       display:flex;align-items:center;gap:.5rem;padding:.4rem .7rem;
       box-shadow:0 -3px 16px rgba(0,0,0,.25);flex-wrap:wrap;`;
@@ -5397,7 +5466,7 @@ function lyricsShowPanel(v){
   document.getElementById('lyrics-panel')?.remove();
   const panel=document.createElement('div');
   panel.id='lyrics-panel';
-  panel.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:900;
+  panel.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:2900;
     background:var(--modal-bg);border-top:1px solid var(--rule2);
     display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;
     padding:.35rem .7rem;box-shadow:0 -2px 12px rgba(0,0,0,.12)`;
@@ -6858,7 +6927,7 @@ function utShowWindowPopoverDirect(instr, chord, db, cardEl){
     ()=>{ if(t.windowCount===null) t.windowCount=_utAutoCount(instr,chord); t.windowCount=Math.max(3,(t.windowCount||7)-1); }
   );
 
-  pop.style.cssText=`position:fixed;z-index:900;
+  pop.style.cssText=`position:fixed;z-index:2900;
     background:var(--modal-bg);border:1px solid var(--rule2);border-radius:var(--r);
     box-shadow:0 4px 20px rgba(0,0,0,.22);padding:.6rem .8rem;
     display:flex;gap:.8rem;align-items:flex-start;`;
@@ -6944,7 +7013,7 @@ function utShowWindowPopover(idx, cardEl){
     ()=>{ utStepWindowCount(idx,-1); _utWinPopRefresh(idx,pop); }
   );
 
-  pop.style.cssText=`position:fixed;z-index:800;
+  pop.style.cssText=`position:fixed;z-index:2800;
     background:var(--modal-bg);border:1px solid var(--rule2);border-radius:var(--r);
     box-shadow:0 4px 20px rgba(0,0,0,.22);padding:.6rem .8rem;
     display:flex;gap:.8rem;align-items:flex-start;${dis}`;
@@ -7568,7 +7637,7 @@ function openDiagBandPanel(bandId){
   if(modal) modal.remove();
   modal=document.createElement('div');
   modal.id='diagband-panel';
-  modal.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:400;
+  modal.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:2400;
     background:var(--modal-bg);border-top:2px solid var(--accent);
     box-shadow:0 -4px 24px rgba(0,0,0,.2);padding:.5rem .8rem;
     display:flex;align-items:center;gap:.6rem;flex-wrap:wrap`;
@@ -8521,7 +8590,7 @@ function openScaleBandPanel(){
   if(modal) modal.remove();
   modal=document.createElement('div');
   modal.id='scaleband-panel';
-  modal.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:400;
+  modal.style.cssText=`position:fixed;bottom:0;left:0;right:0;z-index:2400;
     background:var(--modal-bg);border-top:2px solid var(--accent);
     box-shadow:0 -4px 24px rgba(0,0,0,.2);padding:.5rem .8rem;
     display:flex;flex-direction:column;gap:.4rem;max-height:55vh;overflow-y:auto`;
@@ -9797,6 +9866,7 @@ function openNotationPanel(){
   // Initialiser les champs diag si absents
   if(m.notation.type==='diag' && !m.notation.diagInstr) m.notation.diagInstr='piano';
   closeAllPanels();
+  document.getElementById('notation-panel').style.zIndex='2900'; /* remet la valeur normale — une valeur explicite bat toujours "auto", donc l'effacer entièrement (comme avant) laissait le panneau perdre face à n'importe quel texte d'accord */
   document.getElementById('notation-panel').style.display='block';
   notTab(m.notation.type||'rhythm');
   const vbtn=document.getElementById('not-voice-btn');
@@ -9815,6 +9885,58 @@ function openNotationPanel(){
   });
   reflow();
   if((m.notation.type||'rhythm')!=='diag') setTimeout(()=>renderEditorSVG(),80);
+  _reserveCanvasSpaceForPanel('notation-panel');
+  _scrollSelectedAbovePanel('notation-panel');
+  // (diagnostic temporaire retiré — bug résolu)
+}
+// La marge basse réservée (_reserveCanvasSpaceForPanel) crée de la place
+// pour défiler, mais ne fait pas défiler automatiquement — si la mesure
+// éditée se trouve déjà sous le panneau au moment de l'ouverture, rien ne
+// la remonte, elle reste visuellement coincée derrière/au-dessus du
+// panneau (bug historique de superposition qu'on cherchait exactement).
+function _scrollSelectedAbovePanel(panelId){
+  const ca=document.getElementById('canvas-area');
+  const panel=document.getElementById(panelId);
+  if(!panel) return;
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    const selEl=document.querySelector('.measure.selected');
+    if(!selEl) return;
+    // scrollIntoView laisse le navigateur déterminer lui-même le bon
+    // conteneur de défilement (ne suppose pas que c'est #canvas-area).
+    selEl.scrollIntoView({block:'center',behavior:'instant'});
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const panelTop=panel.getBoundingClientRect().top;
+      const measRect=selEl.getBoundingClientRect();
+      const margin=16;
+      const overlap=measRect.bottom-(panelTop-margin);
+      if(overlap>0){
+        // Ajuste à la fois #canvas-area (si c'est lui qui défile) et la
+        // fenêtre (si c'est elle) — l'un des deux sera un no-op inoffensif.
+        if(ca) ca.scrollTop+=overlap;
+        window.scrollBy(0,overlap);
+      }
+    }));
+  }));
+}
+// La grille défile dans #canvas-area, dont la marge basse fixe (4rem) ne
+// suffit pas à laisser la dernière ligne défiler entièrement au-dessus d'un
+// panneau du bas ouvert. On mesure la hauteur réelle du panneau et on
+// l'ajoute à cette marge.
+function _reserveCanvasSpaceForPanel(panelId){
+  const ca=document.getElementById('canvas-area');
+  const panel=document.getElementById(panelId);
+  if(!ca||!panel) return;
+  if(ca.dataset.origPb===undefined) ca.dataset.origPb=getComputedStyle(ca).paddingBottom;
+  requestAnimationFrame(()=>{
+    const h=panel.offsetHeight;
+    if(h>0) ca.style.paddingBottom=`calc(${ca.dataset.origPb} + ${h}px)`;
+  });
+}
+function _releaseCanvasSpace(){
+  const ca=document.getElementById('canvas-area');
+  if(!ca) return;
+  if(ca.dataset.origPb!==undefined) ca.style.paddingBottom=ca.dataset.origPb;
+  delete ca.dataset.origPb;
 }
 function closeNotationPanel(){
   const wasProxy=!!_fbNotProxy;
@@ -9822,7 +9944,8 @@ function closeNotationPanel(){
   _commitFBNotProxy();
   const _notPanel=document.getElementById('notation-panel');
   _notPanel.style.display='none';
-  _notPanel.style.zIndex='';
+  _notPanel.style.zIndex='2900';
+  _releaseCanvasSpace();
   if(wasProxy&&prevFbId){
     // Ré-ouvrir le panel bloc libre
     setTimeout(()=>openFBPanel(prevFbId),50);
@@ -11310,10 +11433,16 @@ const DRUM_MAP=[
 function getDrumInst(id){ return DRUM_MAP.find(d=>d.id===id)||DRUM_MAP[1]; }
 
 function drumLG(zoom){ if(typeof zoom==='number') return zoom; return zoom?20:9; }
+// Position la plus haute possible parmi tous les instruments de DRUM_MAP
+// (actuellement Ride et Crash, line:6). La marge du haut se calcule
+// TOUJOURS par rapport à cette valeur fixe, jamais par rapport au contenu
+// réel d'une mesure — sinon la position de chaque instrument (HH compris)
+// se déplacerait selon la présence ou non d'un ride/crash ailleurs.
+const DRUM_FIXED_MAXLP=6;
 function drumTopMargin(zoom, maxLP){
   const lg=drumLG(zoom);
   const cy=3.5*lg+2*lg;
-  const maxLPv=(maxLP!==undefined&&maxLP!==null)?maxLP:5;
+  const maxLPv=DRUM_FIXED_MAXLP;
   const STEM_LEN=3.5*lg;
   const stemTipY=cy-maxLPv*lg/2-STEM_LEN;
   // Espace nécessaire au-dessus + marge lg
@@ -11399,19 +11528,19 @@ function drawDrumHead(x,y,headType,nr,col){
   return g;
 }
 
-function drawDrumLedgers(svg,x,lp,zoom,col){
+function drawDrumLedgers(svg,x,lp,zoom,col,maxLP){
   const nr=drumNR(zoom);
   // Lignes supplémentaires au-dessus (>4) ou en dessous (<-4)
   if(lp>4){
     for(let l=6;l<=lp;l+=2){
-      const y=drumLineY(l,zoom);
+      const y=drumLineY(l,zoom,maxLP);
       svg.appendChild(svgEl('line',{x1:x-nr*1.8,y1:y,x2:x+nr*1.8,y2:y,
         stroke:col,'stroke-width':0.8}));
     }
   }
   if(lp<-4){
     for(let l=-6;l>=lp;l-=2){
-      const y=drumLineY(l,zoom);
+      const y=drumLineY(l,zoom,maxLP);
       svg.appendChild(svgEl('line',{x1:x-nr*1.8,y1:y,x2:x+nr*1.8,y2:y,
         stroke:col,'stroke-width':0.8}));
     }
@@ -11533,7 +11662,7 @@ function renderDrumsInto(svg,m,W,interactive,zoom,showClef=true,SP=1.0){
         svg.appendChild(g);
         return; // ne pas continuer avec le rendu normal
       }
-      drawDrumLedgers(svg,baseX,inst.line,zoom,col);
+      drawDrumLedgers(svg,baseX,inst.line,zoom,col,maxLP);
       if(nt.paren) svg.appendChild(drawParen(baseX,noteY,NR,col));
       // voice: 1=hampe haut, 2=hampe bas (même règle que rythme)
       const voice=nt.voice||(inst.defaultVoice||1);
@@ -11671,6 +11800,11 @@ function renderDrumsInto(svg,m,W,interactive,zoom,showClef=true,SP=1.0){
         : Math.max(...naturalTipY);  // V2 : le plus bas  (y le plus grand)
 
       // Prolonger les hampes courtes jusqu'au commonTipY
+      // groupHasRideOrCrash : le groupe de ligature contient-il une ride ou une crash ?
+      const groupHasRideOrCrash=beamable.some(o=>{
+        const _id=getDrumInst(o.drum||'snare').id;
+        return _id==='ride'||_id==='crash';
+      });
       beamable.forEach((nt2,bi)=>{
         if(Math.abs(naturalTipY[bi]-commonTipY)>0.5){
           const bX=slotX+nt2.pos*subW2+(nt2.offsetX||0);
@@ -11679,10 +11813,16 @@ function renderDrumsInto(svg,m,W,interactive,zoom,showClef=true,SP=1.0){
           const _headXC=_instC.head==='x'||_instC.head==='xo';
           const _rimXOff=interactive?1.5:0.4-(9-lg)*0.15;
           const _extC=(!stemUp&&_instC.head==='normal')?1.3*lg/9-(9-lg)*0.12:(!stemUp&&_headXC)?_rimXOff:(_instC.head==='tom')?-0.35:0;
-          const sx=bXs[bi]+_extC; // déjà décalé + correction tête ronde
+          // Rajout de hampe d'un HH lié par ligature à une ride ou une crash
+          // (aucun autre cas) : décalages distincts pour charley fermé et ouvert.
+          const _isHHClosed=_instC.id==='hihat_closed';
+          const _isHHOpen=_instC.id==='hihat_open';
+          const _hhRideCrashOx=(_isHHClosed&&groupHasRideOrCrash)?2.9:(_isHHOpen&&groupHasRideOrCrash)?0.5:0;
+          const _hhRideCrashOy=(_isHHClosed&&groupHasRideOrCrash)?1:0;
+          const sx=bXs[bi]+_extC+_hhRideCrashOx; // déjà décalé + correction tête ronde
           const _swRim=(_headXC&&!interactive)?lg*0.135*(0.9-(9-lg)/54):lg*0.135;
           svg.appendChild(svgEl('line',{
-            x1:sx,y1:naturalTipY[bi],x2:sx,y2:commonTipY,
+            x1:sx,y1:naturalTipY[bi]+_hhRideCrashOy,x2:sx,y2:commonTipY+_hhRideCrashOy,
             stroke:'var(--ink)','stroke-width':Math.max(0.5,_swRim),'stroke-linecap':'round'
           }));
         }
@@ -14579,7 +14719,9 @@ function openNotationPanelForFBItem(blockId, colIdx, itemIdx){
   // 4. Ouvrir le panel notation (z-index supérieur au panel bloc libre)
   const _notPanel=document.getElementById('notation-panel');
   _notPanel.style.display='block';
-  _notPanel.style.zIndex='350';
+  _notPanel.style.zIndex='2950';
+  _reserveCanvasSpaceForPanel('notation-panel');
+  _scrollSelectedAbovePanel('notation-panel');
   const vbtn=document.getElementById('not-voice-btn');
   if(vbtn) vbtn.textContent=(proxy.notation.voice||1)===2?'V2 ↓':'V1 ↑';
   const spanInp=document.getElementById('not-span-val');
@@ -15502,6 +15644,10 @@ function closeAllPanels(){
   // Chord popup
   const cp=document.getElementById('chord-popup');
   if(cp) cp.classList.remove('open');
+  // Filet de sécurité : la marge basse réservée pour le panneau notation
+  // (voir _reserveCanvasSpaceForPanel) doit toujours être libérée ici,
+  // même si on ferme via ce chemin générique plutôt que closeNotationPanel().
+  if(typeof _releaseCanvasSpace==='function') _releaseCanvasSpace();
 }
 // ════ SYM EDITOR ══════════════════════════════════════════
 let _symeIdx=null, _symeOld=null, _symeAlign='left';
@@ -16928,7 +17074,7 @@ function reflow(){
           if(so.font) s.style.fontFamily=so.font;
           if(so.offsetX||so.offsetY) s.style.transform=`translate(${so.offsetX||0}px,${so.offsetY||0}px)`;
           s.style.cursor='pointer';s.title='Cliquer pour modifier';
-          s.addEventListener('click',e=>{e.stopPropagation();select(idx);openSecPanel(idx);});
+          s.addEventListener('click',e=>{e.stopPropagation();if(_multiMode){toggleMultiSel(idx);return;}select(idx);openSecPanel(idx);});
           s.addEventListener('dblclick',e=>{e.stopPropagation();select(idx);openSecEditor(idx);});
           ov.appendChild(s);
         }
@@ -16952,7 +17098,7 @@ function reflow(){
             se.style.cursor='pointer';
             se.title='Cliquer pour modifier';
             se.addEventListener('click',e=>{
-              e.stopPropagation(); select(idx); openSymEditor(idx,s);
+              e.stopPropagation(); if(_multiMode){ toggleMultiSel(idx); return; } select(idx); openSymEditor(idx,s);
             });
             sr.appendChild(se);
           });
@@ -16970,7 +17116,7 @@ function reflow(){
           if(ao.align) a.style.textAlign=ao.align;
           if(ao.offsetX||ao.offsetY) a.style.transform=`translate(${ao.offsetX||0}px,${ao.offsetY||0}px)`;
           a.style.cursor='text';a.title='Cliquer pour modifier';
-          a.addEventListener('click',e=>{e.stopPropagation();select(idx);openAnnotPanel(idx);});
+          a.addEventListener('click',e=>{e.stopPropagation();if(_multiMode){toggleMultiSel(idx);return;}select(idx);openAnnotPanel(idx);});
           ov.appendChild(a);
         }
         // Volta clickable → ouvre le modal volta
@@ -16978,7 +17124,9 @@ function reflow(){
           // Le bracket est déjà dans cell, on le rend cliquable via l'overlay-cell
           cell.style.cursor='pointer';cell.title='Cliquer pour modifier la volta';
           cell.addEventListener('click',e=>{
-            e.stopPropagation(); select(idx); openVoltaModal();
+            e.stopPropagation();
+            if(_multiMode){ toggleMultiSel(idx); return; }
+            select(idx); openVoltaModal();
           });
         } else {
           // Overlay cell sélectionne la mesure au clic
@@ -17048,6 +17196,7 @@ function reflow(){
             spacerSettBtn.textContent='⬜';
             spacerSettBtn.addEventListener('click',e=>{
               e.stopPropagation();
+              if(_multiMode){ toggleMultiSel(idx); return; }
               select(idx); openSpacerPanel();
             });
             spEl.appendChild(spacerSettBtn);
@@ -17108,6 +17257,7 @@ function reflow(){
           if(o.accidScale!=null) mEl.style.setProperty('--chord-accid-scale',o.accidScale);
           if(o.accidGap!=null) mEl.style.setProperty('--chord-accid-gap',o.accidGap+'em');
           if(o.bassVY!=null) mEl.style.setProperty('--chord-bass-vy',o.bassVY+'em');
+          if(o.bassVX!=null) mEl.style.setProperty('--chord-bass-vx',o.bassVX+'em');
         }
 
         if(hasTsHere){
@@ -17121,7 +17271,7 @@ function reflow(){
           tsEl.style.cssText=`position:absolute;left:${tsLeft}px;top:0;bottom:0;width:14px;z-index:7;`;
           tsEl.innerHTML=`<span class="ts-num" style="font-size:${fsz};position:relative;z-index:2">${m.ts.num}</span><span class="ts-den" style="font-size:${fsz};position:relative;z-index:2">${m.ts.den}</span>`;
           tsEl.style.cursor='pointer'; tsEl.title='Cliquer pour modifier';
-          tsEl.addEventListener('click',e=>{ e.stopPropagation(); select(idx); openCustomTsPanel(idx); });
+          tsEl.addEventListener('click',e=>{ e.stopPropagation(); if(_multiMode){ toggleMultiSel(idx); return; } select(idx); openCustomTsPanel(idx); });
           mEl.appendChild(tsEl);
           // Pas de paddingLeft supplémentaire pour la métrique quand elle est à gauche
           if(!m.repeatStart) mEl.style.paddingLeft='14px';
@@ -17170,6 +17320,7 @@ function reflow(){
           cell.addEventListener('click',e=>{
             if(e.shiftKey){ return; } // laisser remonter vers mEl pour shift+clic
             e.stopPropagation();
+            if(_multiMode){ toggleMultiSel(idx); return; }
             select(idx);
             openChordPopup(idx,si);
           });
@@ -17184,7 +17335,7 @@ function reflow(){
             fWrap.title="Point d'orgue — cliquer pour modifier";
             const fermataDefaultPx=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--typo-sym-size'))||20)*3;
             fWrap.appendChild(createSymbolSVG('𝄐', fo.size||fermataDefaultPx));
-            fWrap.addEventListener('click',e=>{ e.stopPropagation(); openFermataEditor(idx,si); });
+            fWrap.addEventListener('click',e=>{ e.stopPropagation(); if(_multiMode){ toggleMultiSel(idx); return; } openFermataEditor(idx,si); });
             cell.appendChild(fWrap);
           }
           cr2.appendChild(cell);
@@ -17301,7 +17452,7 @@ function reflow(){
             cell.style.cursor='pointer';
             cell.title='Cliquer pour éditer la notation';
             cell.addEventListener('click',e=>{
-              e.stopPropagation(); select(idx); openNotationPanel();
+              e.stopPropagation(); if(_multiMode){ toggleMultiSel(idx); return; } select(idx); openNotationPanel();
             });
           }
           notRowEl.appendChild(cell);
