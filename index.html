@@ -1122,7 +1122,7 @@ textarea.fi{resize:vertical;min-height:40px}
   #topbar,#dropdown,.page-ctrl,.row-ctrl,.no-print,#pedline-modal,
   #typo-panel,#sym-panel,#annot-panel,#sec-panel,
   #chord-popup,#sec-editor,#quick-modal,#notation-panel,#freeblock-panel,#version-panel,
-  #mso-panel,#spacer-panel,#diagband-panel,#grilles-modal,#setlist-modal,#templates-modal,#row-mpr-panel,
+  #mso-panel,#spacer-panel,#diagband-panel,#grilles-modal,#setlist-modal,#setlist-editor-modal,#templates-modal,#row-mpr-panel,
   .modal-backdrop,.app-modal,#lyrics-panel{display:none!important}
   #canvas-area{display:block!important;padding:0!important;margin:0!important;
     background:white!important;overflow:visible!important}
@@ -6224,6 +6224,13 @@ function setlistUpdateLoadedTrack(){
   localStorage.setItem(SETLIST_PREFIX+_loadedFromSetlist.setlistId,JSON.stringify(sl));
   if(_setlistCurrent && _setlistCurrent.id===sl.id){ _setlistCurrent=sl; renderSetlistTracks(); }
   _showSaveStatus('✓ Mis à jour dans la setlist "'+(sl.name||'?')+'"');
+  // La mise à jour ci-dessus n'affecte que le localStorage du navigateur —
+  // si la personne garde un fichier .json de cette setlist comme référence
+  // (transfert, sauvegarde externe...), il faut le proposer explicitement
+  // pour ne pas l'oublier.
+  if(confirm('Setlist mise à jour dans le navigateur.\nVeux-tu aussi exporter le fichier .json à jour ?')){
+    _doSetlistExport(sl);
+  }
 }
 function setlistSave(){
   if(!_setlistCurrent) return;
@@ -6253,13 +6260,115 @@ function _doSetlistExport(sl){
 // concatène tous ces HTML dans #canvas-area et on imprime une seule fois.
 // L'éditeur est ensuite restauré exactement dans l'état où l'utilisateur
 // l'avait laissé (son morceau courant, non sauvegardé y compris).
-async function printSetlist(){
+// Version à préselectionner pour un morceau : la version "principale"
+// (isPrincipal) si elle existe, sinon celle qui était active à la
+// sauvegarde, sinon la première de la liste.
+function _trackPrincipalVersionId(track){
+  const vlist=(track.data&&Array.isArray(track.data.versions))?track.data.versions:[];
+  if(!vlist.length) return track.data?.currentVersionId||null;
+  const principal=vlist.find(v=>v.isPrincipal);
+  if(principal) return principal.id;
+  if(vlist.some(v=>v.id===track.data.currentVersionId)) return track.data.currentVersionId;
+  return vlist[0].id;
+}
+
+function printSetlist(){
   if(!_setlistCurrent || !_setlistCurrent.tracks || !_setlistCurrent.tracks.length){
     alert('Cette setlist est vide — ajoute au moins un morceau avant d\'imprimer.');
     return;
   }
-  if(!confirm(`Imprimer les ${_setlistCurrent.tracks.length} morceaux de "${_setlistCurrent.name||'cette setlist'}" en un seul PDF ?`)) return;
+  const tracks=_setlistCurrent.tracks;
 
+  // Masquer l'éditeur de setlist pendant la sélection (rouvert si annulé).
+  document.getElementById('setlist-editor-modal').style.display='none';
+
+  const modal=document.createElement('div');
+  modal.style.cssText=`position:fixed;inset:0;z-index:960;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center`;
+  const inner=document.createElement('div');
+  inner.style.cssText=`background:var(--modal-bg);border-radius:calc(var(--r)*2);width:min(460px,92vw);max-height:82vh;display:flex;flex-direction:column;overflow:hidden`;
+  const head=document.createElement('div');
+  head.style.cssText=`padding:.7rem 1rem;border-bottom:1px solid var(--rule);flex-shrink:0`;
+  head.innerHTML=`<div style="font-family:var(--font-mono);font-size:.72rem;font-weight:700;color:var(--ink)">🖨 Imprimer la setlist</div>
+    <div style="font-family:var(--font-mono);font-size:.55rem;color:var(--ink3);margin-top:.2rem">Choisis les morceaux (et la version pour ceux qui en ont plusieurs)</div>`;
+  const list=document.createElement('div');
+  list.style.cssText=`overflow-y:auto;flex:1;padding:.5rem .8rem;display:flex;flex-direction:column;gap:.45rem`;
+
+  tracks.forEach((track,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText=`display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem;min-height:44px;
+      border:1px solid var(--rule);border-radius:var(--r);background:var(--ui);box-sizing:border-box;cursor:pointer`;
+    const chk=document.createElement('input');
+    chk.type='checkbox'; chk.checked=true; chk.id='pst-chk-'+i;
+    chk.style.cssText=`width:22px;height:22px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)`;
+    row.appendChild(chk);
+    const label=document.createElement('label');
+    label.htmlFor=chk.id;
+    label.textContent=track.title||'Sans titre';
+    label.style.cssText=`flex:1;font-family:var(--font-mono);font-size:.66rem;color:var(--ink);cursor:pointer;padding:.2rem 0`;
+    row.appendChild(label);
+    const vlist=(track.data&&Array.isArray(track.data.versions))?track.data.versions:[];
+    if(vlist.length>1){
+      const principalId=_trackPrincipalVersionId(track);
+      const sel=document.createElement('select');
+      sel.id='pst-ver-'+i;
+      sel.style.cssText=`font-family:var(--font-mono);font-size:.62rem;padding:.4rem .5rem;min-height:38px;
+        border-radius:var(--r);border:1px solid var(--rule2);background:var(--paper);color:var(--ink);flex-shrink:0`;
+      vlist.forEach(v=>{
+        const opt=document.createElement('option');
+        opt.value=v.id; opt.textContent=v.name||v.type||v.id;
+        if(v.id===principalId) opt.selected=true;
+        sel.appendChild(opt);
+      });
+      // Ne pas laisser un tap sur le menu déroulant basculer la case à
+      // cocher de la ligne (voir le handler de clic sur `row` plus bas).
+      sel.addEventListener('click',e=>e.stopPropagation());
+      row.appendChild(sel);
+    }
+    // Toute la ligne est tapable (case à cocher plus facile à atteindre au
+    // doigt) — sauf si le tap vient du menu déroulant lui-même.
+    row.addEventListener('click',e=>{
+      if(e.target===chk||e.target.tagName==='SELECT') return;
+      chk.checked=!chk.checked;
+    });
+    list.appendChild(row);
+  });
+
+  const foot=document.createElement('div');
+  foot.style.cssText=`display:flex;gap:.5rem;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap`;
+  const btnAll=document.createElement('button');
+  btnAll.className='tbtn'; btnAll.textContent='Tout'; btnAll.style.cssText='font-size:.6rem;padding:.5rem .7rem;min-height:38px';
+  btnAll.onclick=()=>{ tracks.forEach((_,i)=>{ const c=document.getElementById('pst-chk-'+i); if(c) c.checked=true; }); };
+  const btnNone=document.createElement('button');
+  btnNone.className='tbtn'; btnNone.textContent='Aucun'; btnNone.style.cssText='font-size:.6rem;padding:.5rem .7rem;min-height:38px';
+  btnNone.onclick=()=>{ tracks.forEach((_,i)=>{ const c=document.getElementById('pst-chk-'+i); if(c) c.checked=false; }); };
+  const btnCancel=document.createElement('button');
+  btnCancel.className='tbtn'; btnCancel.textContent='Annuler'; btnCancel.style.cssText='margin-left:auto;font-size:.64rem;padding:.5rem .7rem;min-height:38px';
+  btnCancel.onclick=()=>{ modal.remove(); document.getElementById('setlist-editor-modal').style.display='flex'; };
+  const btnPrint=document.createElement('button');
+  btnPrint.className='tbtn'; btnPrint.textContent='🖨 Imprimer'; btnPrint.style.cssText='font-size:.64rem;padding:.5rem .8rem;min-height:38px;background:var(--accent);color:var(--acfg);border-color:var(--accent)';
+  btnPrint.onclick=()=>{
+    const selections=[];
+    tracks.forEach((track,i)=>{
+      const c=document.getElementById('pst-chk-'+i);
+      if(!c||!c.checked) return;
+      const vsel=document.getElementById('pst-ver-'+i);
+      selections.push({track, versionId:vsel?vsel.value:_trackPrincipalVersionId(track)});
+    });
+    if(!selections.length){ alert('Sélectionne au moins un morceau à imprimer.'); return; }
+    modal.remove();
+    _printSetlistExec(selections);
+  };
+  foot.appendChild(btnAll); foot.appendChild(btnNone); foot.appendChild(btnCancel); foot.appendChild(btnPrint);
+
+  inner.appendChild(head); inner.appendChild(list); inner.appendChild(foot);
+  modal.appendChild(inner);
+  modal.addEventListener('click',e=>{ if(e.target===modal){ modal.remove(); document.getElementById('setlist-editor-modal').style.display='flex'; } });
+  showModal(modal);
+}
+
+// Exécute l'impression groupée pour la sélection validée dans printSetlist().
+// selections : [{track, versionId}]
+async function _printSetlistExec(selections){
   const _nextFrame=()=>new Promise(r=>requestAnimationFrame(r));
   const canvasEl=document.getElementById('canvas-area');
   // Sauvegarde complète de l'état actuel de l'éditeur (morceau en cours,
@@ -6275,16 +6384,30 @@ async function printSetlist(){
   };
 
   try{
+    // Fermer toute modale encore ouverte (setlist, sélection...) : une
+    // modale visible ne doit jamais se retrouver dans l'impression, même
+    // si elle est déjà couverte par le CSS d'impression — on le fait aussi
+    // explicitement en JS par sécurité.
+    if(typeof closeAllModals==='function') closeAllModals();
+    document.getElementById('setlist-modal').style.display='none';
+    document.getElementById('setlist-editor-modal').style.display='none';
+
     const pagesHTML=[];
-    for(const track of _setlistCurrent.tracks){
-      // Clone profond : _restoreData()/reflow() ne doivent jamais pouvoir
+    for(const {track,versionId} of selections){
+      // Clone profond : _restoreData()/vLoad() ne doivent jamais pouvoir
       // muter les données originales du morceau stockées dans la setlist.
       const trackData=JSON.parse(JSON.stringify(track.data));
       _restoreData(trackData);
       try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){ /* API non supportée */ }
       await _nextFrame(); await _nextFrame();
-      const cv=currentVersionId?versions.find(v=>v.id===currentVersionId):null;
-      if(cv?.type!=='lyrics') reflow();
+      // Basculer explicitement sur la version choisie : vLoad() sait gérer
+      // les types spéciaux (paroles, diagrammes seuls...) qui ne se
+      // rendent pas via un simple reflow() de l'état standard — contrairement
+      // à _restoreData() seul, qui reflow() toujours l'état "brut".
+      const targetVersionId=versionId||trackData.currentVersionId||null;
+      if(targetVersionId && Array.isArray(versions) && versions.some(v=>v.id===targetVersionId)){
+        vLoad(targetVersionId);
+      }
       await _nextFrame(); await _nextFrame();
       pagesHTML.push(canvasEl?canvasEl.innerHTML:'');
     }
