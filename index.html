@@ -20433,10 +20433,25 @@ function irealParseSongData(data){
 // (le dernier segment, s'il y en a plusieurs, est le nom de la playlist, pas
 // une chanson).
 function irealExtractSongs(text){
-  const m=/irealb:\/\/([^"'<\s]*)/.exec(text);
-  if(!m) return [];
+  // On repère le guillemet qui OUVRE l'attribut HTML (" ou ', juste avant
+  // irealb://) et on capture jusqu'à ce même guillemet qui le referme —
+  // via une rétro-référence (\1). Une apostrophe présente dans un titre de
+  // morceau (ex: "L'adore") ne peut alors plus jamais être confondue avec
+  // la fin du lien, quel que soit le style de guillemets utilisé.
+  let raw=null;
+  const mAttr=/(["'])irealb:\/\/(.*?)\1/s.exec(text);
+  if(mAttr){
+    raw=mAttr[2];
+  }else{
+    // Repli : pas de guillemet détecté autour (cas d'un lien irealb://
+    // collé directement, sans balise HTML) — on prend tout ce qui suit
+    // jusqu'à la fin du texte collé.
+    const mRaw=/irealb:\/\/(.*)/s.exec(text);
+    if(!mRaw) return [];
+    raw=mRaw[1].trim();
+  }
   let decoded;
-  try{ decoded=decodeURIComponent(m[1]); }catch(e){ return []; }
+  try{ decoded=decodeURIComponent(raw); }catch(e){ return []; }
   const parts=decoded.split('===').filter(p=>p);
   if(parts.length>1) parts.pop(); // nom de la playlist, pas une chanson
   return parts.map(irealParseSongData);
@@ -20512,6 +20527,12 @@ function importIrealPro(){
       resultsWrap.innerHTML='<div class="hint">Aucun morceau iReal Pro trouvé.</div>';
       return;
     }
+    const bulkBtn=document.createElement('button');
+    bulkBtn.className='tbtn pri';
+    bulkBtn.textContent='📋 Importer toute la playlist en setlist ('+songDataList.length+')';
+    bulkBtn.style.cssText='width:100%;box-sizing:border-box;font-size:.62rem;padding:.5rem;margin-bottom:.4rem';
+    bulkBtn.onclick=()=>_doIrealImportAsSetlist(songDataList);
+    resultsWrap.appendChild(bulkBtn);
     songDataList.forEach(data=>{
       let song=null;
       try{ song=irealBuildSong(data); }catch(e){ song=null; }
@@ -20570,6 +20591,66 @@ function _doIrealImport(song){
     state:newState, typo:vCollectTypo(), sliders:vCollectSliders(), fmt:currentFmt, screenFmt, printFmt});
   vLoad(id);
   _showSaveStatus('✓ Morceau importé depuis iReal Pro');
+}
+
+// Convertit une playlist iReal Pro entière en une NOUVELLE setlist CCE : un
+// morceau par piste iReal, chacun avec une seule version (marquée comme
+// principale). Ne touche jamais au fichier actuellement ouvert dans
+// l'éditeur — construit des fichiers CCE complets et indépendants, un par
+// morceau, uniquement en mémoire, avant de les ranger dans la setlist.
+function _doIrealImportAsSetlist(songDataList){
+  // iReal Pro ne transporte que la grille — pas de mise en forme (typo,
+  // tailles de notation…). On reprend donc les réglages ACTUELLEMENT actifs
+  // dans l'éditeur comme modèle commun à tous les morceaux importés.
+  const baseline=_buildSaveData();
+  const built=[];
+  let failCount=0;
+  songDataList.forEach(data=>{
+    let song=null;
+    try{ song=irealBuildSong(data); }catch(e){ song=null; }
+    if(song) built.push(song); else failCount++;
+  });
+  if(!built.length){
+    alert('Aucun morceau exploitable dans cette playlist.');
+    return;
+  }
+  const defaultName='Playlist iReal Pro ('+built.length+' morceaux)';
+  const name=prompt('Nom de la nouvelle setlist :',defaultName);
+  if(name===null) return; // annulé
+
+  const tracks=built.map(song=>{
+    const newState={
+      song:{title:song.title||'Sans titre', composer:song.composer||'', arranger:'',
+        key:irealKeyToCCE(song.key), tempo:song.bpm||120, style:song.style||'', capo:0, notes:''},
+      transposeDisplay:0, transposeDisplayFlat:false,
+      measures: song.measures.length?song.measures:[newMeasure({num:4,den:4})],
+      rowMpr:{}, freeBlocks:[], userTemplates:{}, scaleViewers:[]
+    };
+    const vid=vNewId();
+    const versionObj={id:vid,name:'Principale',isPrincipal:true,type:'standard',
+      state:newState, typo:vCollectTypo(), sliders:vCollectSliders(),
+      fmt:baseline.fmt, screenFmt:baseline.screenFmt, printFmt:baseline.printFmt};
+    // Copie indépendante des réglages communs pour CE morceau — jamais de
+    // référence partagée entre pistes, pour qu'une modification ultérieure
+    // de l'une ne puisse jamais affecter les autres.
+    const trackData=JSON.parse(JSON.stringify(baseline));
+    trackData.state=newState;
+    trackData.versions=[versionObj];
+    trackData.currentVersionId=vid;
+    trackData.savedAt=Date.now();
+    return {title:song.title||'Sans titre', data:trackData};
+  });
+
+  const sl={id:'sl-'+Date.now(), name:name||defaultName, tracks, savedAt:Date.now()};
+  localStorage.setItem(SETLIST_PREFIX+sl.id, JSON.stringify(sl));
+
+  let msg='✓ Setlist "'+sl.name+'" créée avec '+tracks.length+' morceau'+(tracks.length>1?'x':'');
+  if(failCount) msg+=' ('+failCount+' illisible'+(failCount>1?'s':'')+' ignoré'+(failCount>1?'s':'')+')';
+  _showSaveStatus(msg);
+
+  const irealModal=document.getElementById('ireal-import-modal');
+  if(irealModal) irealModal.remove();
+  openSetlistEditor(sl);
 }
 
 function importJSON(){
