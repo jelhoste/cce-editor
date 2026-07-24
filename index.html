@@ -104,7 +104,7 @@
   --typo-sym-weight:300;
 
   /* Layout */
-  --row-h:80px; --bar-w:1.5px;
+  --row-h:64px; --bar-w:1.5px;
   --chord-pad:2px; --chord-fill:1.0; --chord-letter-spacing:-0.06em;
   --nc-letter-spacing:-0.05em;
   --chord-offset-x:-3px;
@@ -1350,6 +1350,8 @@ ${p}
         <span id="tb-version-name" style="font-family:var(--font-mono);font-size:.42rem;color:var(--ink3);white-space:nowrap;overflow:hidden;max-width:60px;text-overflow:ellipsis;line-height:1.2;margin-top:1px"></span>
       </div>
       <span id="save-status" style="font-family:var(--font-mono);font-size:.5rem;color:var(--ink3);opacity:0;transition:opacity .5s;padding:0 .4rem;white-space:nowrap;align-self:center"></span>
+      <button class="tb-tab" id="pl-prev-btn" onclick="plNavTrack(-1)" title="Morceau précédent de la setlist" style="display:none">◀</button>
+      <button class="tb-tab" id="pl-next-btn" onclick="plNavTrack(1)" title="Morceau suivant de la setlist" style="display:none">▶</button>
       <button class="tb-tab" onclick="openTypo()" title="Réglages typographie / mise en page">⚙</button>
       <button class="tb-tab" id="tbt-chords"   onclick="toggleTbPanel('chords')"   title="Accords / Mesures" style="font-size:1.92rem;font-weight:600;letter-spacing:-.02em;display:none">C7</button>
       <button class="tb-tab" id="tbt-struct"   onclick="toggleTbPanel('struct')"   title="Structure / Sections" style="display:none">§</button>
@@ -1414,7 +1416,7 @@ ${p}
       <div class="tb-group">
         <span class="tb-gl">H.ligne</span>
         <button class="tbtn sq" onclick="tbStep('rowh-sl',-2,v=>applyRowH(v))">−</button>
-        <input type="number" class="tb-num" id="rowh-sl" min="30" max="160" step="2" value="80" onchange="applyRowH(this.value)">
+        <input type="number" class="tb-num" id="rowh-sl" min="30" max="160" step="2" value="64" onchange="applyRowH(this.value)">
         <button class="tbtn sq" onclick="tbStep('rowh-sl',2,v=>applyRowH(v))">+</button>
       </div>
       <div class="tb-group">
@@ -1834,13 +1836,13 @@ ${p}
       <div class="fg"><label class="fl">Hauteur de ligne (px)</label>
         <div class="stepper">
           <button class="step-btn left" onclick="stepVal('rowh-sl2',-2,v=>{document.getElementById('rowh-sl').value=v;applyRowH(v)})">−</button>
-          <input type="number" class="fi" id="rowh-sl2" min="30" max="160" step="2" value="80" oninput="document.getElementById('rowh-sl').value=this.value;applyRowH(this.value)">
+          <input type="number" class="fi" id="rowh-sl2" min="30" max="160" step="2" value="64" oninput="document.getElementById('rowh-sl').value=this.value;applyRowH(this.value)">
           <button class="step-btn right" onclick="stepVal('rowh-sl2',2,v=>{document.getElementById('rowh-sl').value=v;applyRowH(v)})">+</button>
         </div></div>
       <div class="fg"><label class="fl">Marges page (mm)</label>
         <div class="stepper">
           <button class="step-btn left" onclick="stepVal('fmt-pad-mm',-1,applyPagePad)">−</button>
-          <input type="number" class="fi" id="fmt-pad-mm" value="10" min="0" max="40" step="1" oninput="applyPagePad()">
+          <input type="number" class="fi" id="fmt-pad-mm" value="7" min="0" max="40" step="1" oninput="applyPagePad()">
           <button class="step-btn right" onclick="stepVal('fmt-pad-mm',1,applyPagePad)">+</button>
         </div></div>
     </div>
@@ -2520,6 +2522,9 @@ ${p}
     <button class="ty-tab" id="syme-al-left"   onclick="symeSetAlign('left')">⇤</button>
     <button class="ty-tab" id="syme-al-center" onclick="symeSetAlign('center')">⇔</button>
     <button class="ty-tab" id="syme-al-right"  onclick="symeSetAlign('right')">⇥</button>
+    <input type="color" id="syme-color" class="fi" value="#cc2200" title="Couleur de ce symbole"
+      style="width:28px;height:28px;padding:0;border-radius:4px;cursor:pointer;margin-left:.3rem" oninput="applySymeOffset()">
+    <button class="ty-tab" onclick="resetSymeColor()" title="Revenir à la couleur globale">⟲</button>
     <button class="ty-tab ty-tab-reset" onclick="symeRemove()">🗑 Suppr.</button>
     <button class="ty-tab ty-tab-close" onclick="closeSymEditor()">✕</button>
   </div>
@@ -2562,6 +2567,9 @@ ${p}
     <button class="ty-tab" id="annot-al-left"   onclick="annotSetAlign('left')">⇤</button>
     <button class="ty-tab" id="annot-al-center" onclick="annotSetAlign('center')">⇔</button>
     <button class="ty-tab" id="annot-al-right"  onclick="annotSetAlign('right')">⇥</button>
+    <input type="color" id="annot-color" class="fi" value="#cc2200" title="Couleur de cette annotation"
+      style="width:28px;height:28px;padding:0;border-radius:4px;cursor:pointer;margin-left:.3rem" oninput="applyAnnotPanel()">
+    <button class="ty-tab" onclick="resetAnnotColor()" title="Revenir à la couleur par défaut">⟲</button>
     <button class="ty-tab ty-tab-reset" onclick="clearAnnotPanel()">Effacer</button>
     <button class="ty-tab ty-tab-close" onclick="closeAnnotPanel()">✕</button>
   </div>
@@ -2609,6 +2617,9 @@ ${p}
     <button class="ty-tab" id="spe-st-text"  onclick="speSetStyle('text')"  title="Texte simple">T</button>
     <button class="ty-tab" id="spe-st-badge" onclick="speSetStyle('badge')" title="Badge coloré"
       style="background:var(--section-c);color:#fff;border-color:var(--section-c)">A</button>
+    <input type="color" id="sec-color" class="fi" value="#cc2200" title="Couleur de cette section"
+      style="width:28px;height:28px;padding:0;border-radius:4px;cursor:pointer;margin-left:.3rem" oninput="applySecPanel()">
+    <button class="ty-tab" onclick="resetSecColor()" title="Revenir à la couleur globale">⟲</button>
     <button class="ty-tab ty-tab-reset" onclick="clearSecPanel()">Effacer</button>
     <button class="ty-tab ty-tab-close" onclick="closeSecPanel()">✕</button>
   </div>
@@ -3473,6 +3484,9 @@ ${p}
     <button class="step-btn left" onclick="stepPedLineX('end',-0.05)">−</button>
     <span id="pl-xe-val" style="font-family:var(--font-mono);font-size:.6rem;min-width:2.5rem;text-align:center;border-top:1px solid var(--rule2);border-bottom:1px solid var(--rule2);height:28px;display:inline-flex;align-items:center;justify-content:center;background:var(--ui2)">100%</span>
     <button class="step-btn right" onclick="stepPedLineX('end',0.05)">+</button>
+    <input type="color" id="pl-color" class="fi" value="#cc2200" title="Couleur de cette ligne"
+      style="width:28px;height:28px;padding:0;border-radius:4px;cursor:pointer;margin-left:.3rem" oninput="savePedLine()">
+    <button class="ty-tab" onclick="resetPedLineColor()" title="Revenir à la couleur globale">⟲</button>
     <!-- Supprimer / Fermer -->
     <button class="tbtn" style="margin-left:auto" onclick="clearPedLine()">🗑</button>
     <button class="tbtn pri" onclick="closePedLineModal()">✓</button>
@@ -3885,7 +3899,7 @@ function setPrintMode(on){
 function mm(v){return v*pxPerMm}
 
 // ════ STATE ══════════════════════════════════════════════
-let PAGE_PAD_MM=10;
+let PAGE_PAD_MM=7;
 let state={
   song:{title:'Mon morceau',composer:'',arranger:'',key:'C',tempo:120,style:'',capo:0,notes:''},
   transposeDisplay:0,    // delta d'affichage (ne modifie pas les accords)
@@ -5981,9 +5995,30 @@ let _setlistCurrent=null;
 // modifications ensuite. null si le morceau courant ne vient pas d'une
 // setlist (ou si le lien n'est plus fiable, ex: fichier importé entre-temps).
 let _loadedFromSetlist=null;
+// Longueur de _undoStack au moment du chargement du morceau courant depuis
+// une setlist — sert à détecter s'il y a eu des modifications depuis (toute
+// modification passe par pushUndo(), donc si la pile a grandi, il y a eu au
+// moins un changement).
+// Empreinte du contenu du morceau au moment du chargement depuis sa setlist
+// — comparée au contenu actuel pour détecter s'il y a eu des modifications.
+// Plus fiable qu'un compteur d'annulations : certaines modifications (section,
+// annotation, symboles, ligne de pédale, mise en page) ne passent pas par
+// pushUndo(), donc un simple compteur pouvait manquer des changements réels.
+let _plNavBaselineSnapshot='';
+function _plSnapshotForCompare(){
+  const d=_buildSaveData();
+  delete d.savedAt; // horodatage : change à chaque appel, ne doit pas compter comme une modification
+  return JSON.stringify(d);
+}
 function _syncSetlistUpdateMenuItem(){
   const it=document.getElementById('dd-setlist-update');
   if(it) it.style.display=_loadedFromSetlist?'':'none';
+}
+function _syncPlNavButtons(){
+  const show=!!_loadedFromSetlist;
+  const prev=document.getElementById('pl-prev-btn'), next=document.getElementById('pl-next-btn');
+  if(prev) prev.style.display=show?'':'none';
+  if(next) next.style.display=show?'':'none';
 }
 
 function openSetlistModal(){
@@ -6199,26 +6234,28 @@ function setlistLoadTrack(i){
   if(!confirm(`Ouvrir "${track.title}" dans l'éditeur ?`)) return;
   _loadedFromSetlist={setlistId:_setlistCurrent.id,trackIndex:i};
   _restoreData(track.data); closeSetlistEditor(); _showSaveStatus('✓ "'+track.title+'" ouvert');
+  _plNavBaselineSnapshot=_plSnapshotForCompare();
   _syncSetlistUpdateMenuItem();
+  _syncPlNavButtons();
 }
 
 // Réenregistre le morceau actuellement ouvert dans la piste de setlist
 // dont il provient (voir _loadedFromSetlist, posé par setlistLoadTrack).
-function setlistUpdateLoadedTrack(){
+function setlistUpdateLoadedTrack(silent){
   if(!_loadedFromSetlist){
     alert('Ce morceau n\'a pas été ouvert depuis une setlist — rien à mettre à jour.');
-    return;
+    return false;
   }
   let sl;
   try{ sl=JSON.parse(localStorage.getItem(SETLIST_PREFIX+_loadedFromSetlist.setlistId)); }catch(e){ sl=null; }
   if(!sl || !Array.isArray(sl.tracks) || !sl.tracks[_loadedFromSetlist.trackIndex]){
     alert('Setlist introuvable (peut-être supprimée, ou jamais sauvegardée) — impossible de mettre à jour.\nTu peux la retrouver dans le menu Setlists et y ajouter ce morceau manuellement.');
-    _loadedFromSetlist=null; _syncSetlistUpdateMenuItem();
-    return;
+    _loadedFromSetlist=null; _syncSetlistUpdateMenuItem(); _syncPlNavButtons();
+    return false;
   }
   const oldTitle=sl.tracks[_loadedFromSetlist.trackIndex].title||'ce morceau';
   const newTitle=state.song?.title||'Sans titre';
-  if(!confirm(`Remplacer "${oldTitle}" par la version actuelle ("${newTitle}") dans la setlist "${sl.name||'?'}" ?`)) return;
+  if(!silent && !confirm(`Remplacer "${oldTitle}" par la version actuelle ("${newTitle}") dans la setlist "${sl.name||'?'}" ?`)) return false;
   sl.tracks[_loadedFromSetlist.trackIndex]={title:newTitle,data:_buildSaveData()};
   sl.savedAt=Date.now();
   localStorage.setItem(SETLIST_PREFIX+_loadedFromSetlist.setlistId,JSON.stringify(sl));
@@ -6227,10 +6264,84 @@ function setlistUpdateLoadedTrack(){
   // La mise à jour ci-dessus n'affecte que le localStorage du navigateur —
   // si la personne garde un fichier .json de cette setlist comme référence
   // (transfert, sauvegarde externe...), il faut le proposer explicitement
-  // pour ne pas l'oublier.
-  if(confirm('Setlist mise à jour dans le navigateur.\nVeux-tu aussi exporter le fichier .json à jour ?')){
+  // pour ne pas l'oublier. Sauf en mode silencieux (déjà confirmé par la
+  // modale de navigation) : on ne propose pas, pour ne pas re-déranger juste
+  // après un "Enregistrer et continuer" déjà explicite.
+  if(!silent && confirm('Setlist mise à jour dans le navigateur.\nVeux-tu aussi exporter le fichier .json à jour ?')){
     _doSetlistExport(sl);
   }
+  return true;
+}
+
+// A-t-il eu au moins une modification depuis le chargement du morceau
+// courant depuis sa setlist ? (toute modification passe par pushUndo())
+function _plHasUnsavedChanges(){
+  return _plSnapshotForCompare()!==_plNavBaselineSnapshot;
+}
+
+// Modale à 3 choix (Enregistrer / Continuer sans enregistrer / Annuler),
+// affichée uniquement s'il y a des modifications non enregistrées avant de
+// changer de morceau. onProceed n'est appelé que si l'utilisateur choisit
+// réellement de continuer (et, en cas d'enregistrement, seulement si celui-ci
+// a effectivement abouti — voir setlistUpdateLoadedTrack() qui renvoie
+// maintenant true/false).
+function _openPlNavConfirmModal(onProceed){
+  const modal=document.createElement('div');
+  modal.style.cssText=`position:fixed;inset:0;z-index:970;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center`;
+  const inner=document.createElement('div');
+  inner.style.cssText=`background:var(--modal-bg);border-radius:calc(var(--r)*2);width:min(380px,92vw);padding:1rem`;
+  inner.innerHTML=`<div style="font-family:var(--font-mono);font-size:.72rem;font-weight:700;color:var(--ink);margin-bottom:.5rem">Modifications non enregistrées</div>
+    <div style="font-family:var(--font-mono);font-size:.6rem;color:var(--ink3);margin-bottom:1rem;line-height:1.4">Ce morceau a été modifié depuis son ouverture. Que veux-tu faire avant de changer de morceau ?</div>`;
+  const foot=document.createElement('div');
+  foot.style.cssText=`display:flex;gap:.5rem;flex-wrap:wrap`;
+  const btnCancel=document.createElement('button');
+  btnCancel.className='tbtn'; btnCancel.textContent='Annuler'; btnCancel.style.cssText='font-size:.62rem;padding:.5rem .7rem';
+  btnCancel.onclick=()=>modal.remove();
+  const btnDiscard=document.createElement('button');
+  btnDiscard.className='tbtn'; btnDiscard.textContent='Continuer sans enregistrer'; btnDiscard.style.cssText='font-size:.62rem;padding:.5rem .7rem';
+  btnDiscard.onclick=()=>{ modal.remove(); onProceed(); };
+  const btnSave=document.createElement('button');
+  btnSave.className='tbtn'; btnSave.textContent='Enregistrer et continuer';
+  btnSave.style.cssText='font-size:.62rem;padding:.5rem .7rem;background:var(--accent);color:var(--acfg);border-color:var(--accent)';
+  btnSave.onclick=()=>{
+    modal.remove();
+    const saved=setlistUpdateLoadedTrack(true); // silencieux : déjà confirmé par ce bouton
+    if(saved) onProceed(); // sinon (setlist introuvable) : on ne bouge pas
+  };
+  foot.appendChild(btnCancel); foot.appendChild(btnDiscard); foot.appendChild(btnSave);
+  inner.appendChild(foot);
+  modal.appendChild(inner);
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  showModal(modal);
+}
+
+// Navigue vers le morceau précédent (-1) ou suivant (+1) de la setlist dont
+// est issu le morceau actuellement ouvert. Boucle sur les extrémités.
+function plNavTrack(direction){
+  if(!_loadedFromSetlist) return;
+  const doNav=()=>{
+    let sl;
+    try{ sl=JSON.parse(localStorage.getItem(SETLIST_PREFIX+_loadedFromSetlist.setlistId)); }catch(e){ sl=null; }
+    if(!sl || !Array.isArray(sl.tracks) || !sl.tracks.length){
+      alert('Setlist introuvable (peut-être supprimée) — impossible de naviguer.\nTu peux la retrouver dans le menu Setlists.');
+      _loadedFromSetlist=null; _syncSetlistUpdateMenuItem(); _syncPlNavButtons();
+      return;
+    }
+    let newIdx=_loadedFromSetlist.trackIndex+direction;
+    if(newIdx<0) newIdx=sl.tracks.length-1;
+    if(newIdx>=sl.tracks.length) newIdx=0;
+    const track=sl.tracks[newIdx];
+    if(!track){ alert('Morceau introuvable dans la setlist.'); return; }
+    if(!confirm(`Ouvrir "${track.title}" ?`)) return;
+    _loadedFromSetlist={setlistId:sl.id,trackIndex:newIdx};
+    _restoreData(JSON.parse(JSON.stringify(track.data)));
+    _plNavBaselineSnapshot=_plSnapshotForCompare();
+    _syncSetlistUpdateMenuItem();
+    _syncPlNavButtons();
+    _showSaveStatus('✓ "'+track.title+'" ouvert');
+  };
+  if(_plHasUnsavedChanges()) _openPlNavConfirmModal(doNav);
+  else doNav();
 }
 function setlistSave(){
   if(!_setlistCurrent) return;
@@ -9944,6 +10055,8 @@ function openAnnotPanel(idx){
   document.getElementById('annot-oy').value=ao.offsetY||0;
   _annotAlign=ao.align||'left';
   annotHighlightAlign(_annotAlign);
+  const annotColorInp=document.getElementById('annot-color');
+  if(annotColorInp) annotColorInp.value=ao.color||getComputedStyle(document.documentElement).getPropertyValue('--ink2').trim()||'#5a5854';
   closeAllPanels();
   document.getElementById('annot-panel').style.display='block';
   focusIfNotTouch(document.getElementById('annot-panel-inp'));
@@ -9967,8 +10080,17 @@ function applyAnnotPanel(){
     size:parseFloat(document.getElementById('annot-sz')?.value)||null,
     offsetX:parseFloat(document.getElementById('annot-ox')?.value)||0,
     offsetY:parseFloat(document.getElementById('annot-oy')?.value)||0,
+    color:document.getElementById('annot-color')?.value||null,
   };
   const inp=document.getElementById('annot-inp'); if(inp) inp.value=text;
+  reflow();
+}
+function resetAnnotColor(){
+  if(_annotIdx===null) return;
+  const m=state.measures[_annotIdx];
+  if(m.annotObj) delete m.annotObj.color;
+  const annotColorInp=document.getElementById('annot-color');
+  if(annotColorInp) annotColorInp.value=getComputedStyle(document.documentElement).getPropertyValue('--ink2').trim()||'#5a5854';
   reflow();
 }
 function clearAnnotPanel(){
@@ -9995,6 +10117,8 @@ function openSecPanel(idx){
   _spStyle=so.style||'badge';
   speHighlightAlign(_spAlign);
   speHighlightStyle(_spStyle);
+  const secColorInp=document.getElementById('sec-color');
+  if(secColorInp) secColorInp.value=so.color||getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
   closeAllPanels();
   document.getElementById('sec-panel').style.display='block';
   focusIfNotTouch(document.getElementById('sec-panel-inp'));
@@ -10041,8 +10165,17 @@ function applySecPanel(){
       size:parseFloat(document.getElementById('sec-sz')?.value)||null,
       offsetX:parseFloat(document.getElementById('sec-ox')?.value)||0,
       offsetY:parseFloat(document.getElementById('sec-oy')?.value)||0,
+      color:document.getElementById('sec-color')?.value||null,
     };
   }
+  reflow();
+}
+function resetSecColor(){
+  if(_secPanelIdx===null) return;
+  const m=state.measures[_secPanelIdx];
+  if(m.section){ const so=secObj(m.section); delete so.color; m.section=so; }
+  const secColorInp=document.getElementById('sec-color');
+  if(secColorInp) secColorInp.value=getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
   reflow();
 }
 function clearSecPanel(){
@@ -15899,6 +16032,8 @@ function openFermataEditor(measIdx,slotIdx){
   const oy=document.getElementById('syme-oy'); if(oy) oy.value=inst.y||0;
   const sz=document.getElementById('syme-sz');
   if(sz) sz.value=inst.size||(getComputedPx('--typo-sym-size')||20)*3;
+  const symeColorInp=document.getElementById('syme-color');
+  if(symeColorInp) symeColorInp.value=inst.color||getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
   const sp=document.getElementById('sym-panel');
   if(sp) sp.style.display='block';
 }
@@ -15921,6 +16056,8 @@ function openSymEditor(idx,s){
   }
   _symeAlign=off.align||'left';
   symeHighlightAlign(_symeAlign);
+  const symeColorInp=document.getElementById('syme-color');
+  if(symeColorInp) symeColorInp.value=off.color||getComputedStyle(document.documentElement).getPropertyValue('--sym-c').trim()||'#cc2200';
   closeAllPanels();
   const sp=document.getElementById('sym-panel');
   if(sp) sp.style.display='block';
@@ -15940,6 +16077,7 @@ function applySymeOffset(){
       x:parseFloat(document.getElementById('syme-ox')?.value)||0,
       y:parseFloat(document.getElementById('syme-oy')?.value)||0,
       size:parseFloat(document.getElementById('syme-sz')?.value)||null,
+      color:document.getElementById('syme-color')?.value||null,
     };
     reflow();
     return;
@@ -15952,7 +16090,24 @@ function applySymeOffset(){
     y:parseFloat(document.getElementById('syme-oy')?.value)||0,
     size:parseFloat(document.getElementById('syme-sz')?.value)||null,
     align:_symeAlign,
+    color:document.getElementById('syme-color')?.value||null,
   };
+  reflow();
+}
+function resetSymeColor(){
+  const symeColorInp=document.getElementById('syme-color');
+  if(_symeFermataMeas!=null){
+    const m=state.measures[_symeFermataMeas]; if(!m||!m.fermataSlots) return;
+    const i=m.fermataSlots.findIndex(f=>_fSlotNum(f)===_symeFermataSlot);
+    if(i>=0){ const fo=_fSlotObj(m.fermataSlots[i]); delete fo.color; m.fermataSlots[i]=fo; }
+    if(symeColorInp) symeColorInp.value=getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
+    reflow();
+    return;
+  }
+  if(_symeIdx===null||!_symeOld) return;
+  const m=state.measures[_symeIdx];
+  if(m.symbolOffsets && m.symbolOffsets[_symeOld]) delete m.symbolOffsets[_symeOld].color;
+  if(symeColorInp) symeColorInp.value=getComputedStyle(document.documentElement).getPropertyValue('--sym-c').trim()||'#cc2200';
   reflow();
 }
 function symeSet(newSym){
@@ -17246,6 +17401,7 @@ function reflow(){
           // Utiliser top au lieu de bottom pour la compatibilité print
           // Positionner via la cellule parente (comme --ov-offset-volta sur :root pour les voltas)
           cell.style.setProperty('--ov-offset-volta', yOff+'px');
+          if(pl.color) cell.style.setProperty('--ped-c', pl.color);
           vEl.style.setProperty('--ped-left', xS+'%');
           vEl.style.setProperty('--ped-right', (span<=1?100-xE:0)+'%');
           vEl.style.setProperty('--ped-w', lw);
@@ -17272,6 +17428,7 @@ function reflow(){
             vEl.className='ped-line'+styleCls;
             const lw2=(pl.lineW||2)+'px';
             cell.style.setProperty('--ov-offset-volta', yOff+'px');
+            if(pl.color) cell.style.setProperty('--ped-c', pl.color);
             vEl.style.setProperty('--ped-left', '0%');
             vEl.style.setProperty('--ped-right', (isLast?100-xE:0)+'%');
             vEl.style.setProperty('--ped-w', lw2);
@@ -17301,6 +17458,10 @@ function reflow(){
           if(so.weight) s.style.fontWeight=so.weight;
           if(so.fontStyle) s.style.fontStyle=so.fontStyle;
           if(so.font) s.style.fontFamily=so.font;
+          if(so.color){
+            if(so.style==='badge'){ s.style.background=so.color; s.style.borderColor=so.color; }
+            else { s.style.color=so.color; }
+          }
           if(so.offsetX||so.offsetY) s.style.transform=`translate(${so.offsetX||0}px,${so.offsetY||0}px)`;
           s.style.cursor='pointer';s.title='Cliquer pour modifier';
           s.addEventListener('click',e=>{e.stopPropagation();if(_multiMode){toggleMultiSel(idx);return;}select(idx);openSecPanel(idx);});
@@ -17324,6 +17485,7 @@ function reflow(){
             }
             if(off.size) se.style.fontSize=off.size+'px';
             if(off.x||off.y) se.style.transform=`translate(${off.x||0}px,${off.y||0}px)`;
+            if(off.color) se.style.color=off.color;
             se.style.cursor='pointer';
             se.title='Cliquer pour modifier';
             se.addEventListener('click',e=>{
@@ -17343,6 +17505,7 @@ function reflow(){
           const a=document.createElement('div');a.className='meas-annotation';a.innerHTML=m.annotation;
           if(ao.size) a.style.fontSize=ao.size+'px';
           if(ao.align) a.style.textAlign=ao.align;
+          if(ao.color) a.style.color=ao.color;
           if(ao.offsetX||ao.offsetY) a.style.transform=`translate(${ao.offsetX||0}px,${ao.offsetY||0}px)`;
           a.style.cursor='text';a.title='Cliquer pour modifier';
           a.addEventListener('click',e=>{e.stopPropagation();if(_multiMode){toggleMultiSel(idx);return;}select(idx);openAnnotPanel(idx);});
@@ -17561,6 +17724,7 @@ function reflow(){
             const baseH=isSimile?'left:50%;transform:translate(calc(-50% + '+(fo.x||0)+'px),calc(22px + '+(fo.y||0)+'px))'
                                  :'left:0;transform:translate('+(fo.x||0)+'px,calc(22px + '+(fo.y||0)+'px))';
             fWrap.style.cssText='position:absolute;bottom:100%;margin-bottom:1px;'+baseH+';cursor:pointer;color:var(--section-c);z-index:12';
+            if(fo.color) fWrap.style.color=fo.color;
             fWrap.title="Point d'orgue — cliquer pour modifier";
             const fermataDefaultPx=(parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--typo-sym-size'))||20)*3;
             fWrap.appendChild(createSymbolSVG('𝄐', fo.size||fermataDefaultPx));
@@ -19276,6 +19440,8 @@ function openPedLineModal(){
   document.getElementById('pl-line-w-val').textContent=(pl.lineW||2);
   document.getElementById('pl-xs-val').textContent=Math.round((pl.xStart||0)*100)+'%';
   document.getElementById('pl-xe-val').textContent=Math.round((pl.xEnd||1)*100)+'%';
+  const plColorInp=document.getElementById('pl-color');
+  if(plColorInp) plColorInp.value=pl.color||getComputedStyle(document.documentElement).getPropertyValue('--ped-c').trim()||'#cc2200';
   document.getElementById('pedline-modal').style.display='block';
 }
 function closePedLineModal(){
@@ -19295,7 +19461,15 @@ function savePedLine(){
     lineW:parseFloat(document.getElementById('pl-line-w-val')?.textContent)||2,
     xStart:parseFloat(document.getElementById('pl-xs-val')?.textContent)/100||0,
     xEnd:parseFloat(document.getElementById('pl-xe-val')?.textContent)/100||1,
+    color:document.getElementById('pl-color')?.value||null,
   };
+  reflow();
+}
+function resetPedLineColor(){
+  if(sel===null||!state.measures[sel].pedLine) return;
+  delete state.measures[sel].pedLine.color;
+  const plColorInp=document.getElementById('pl-color');
+  if(plColorInp) plColorInp.value=getComputedStyle(document.documentElement).getPropertyValue('--ped-c').trim()||'#cc2200';
   reflow();
 }
 function stepPedLineSize(which,delta){
@@ -20388,7 +20562,19 @@ function irealTokensToMeasures(tokens){
       case 'fermata': appendFermataSlot(); break;
       case 'comment': {
         const rc=tok.text.trim().match(/^(\d+)\s*x$/i);
-        if(rc) pendingRepeatCount=parseInt(rc[1]);
+        if(rc){
+          const cnt=parseInt(rc[1]);
+          // Cas où le compte de reprise ("9x") arrive APRÈS la barre fermante
+          // dans le flux iReal (au lieu d'avant, cas le plus courant) : la
+          // mesure concernée est déjà finalisée à cet instant — on l'attache
+          // directement à elle plutôt que de la laisser dériver, via
+          // pendingRepeatCount, sur la mesure suivante.
+          if(!chordsBuf.length && measures.length){
+            const last=measures[measures.length-1];
+            if(last.repeatCount==null){ last.repeatCount=cnt; break; }
+          }
+          pendingRepeatCount=cnt;
+        }
         else pendingAnnotations.push(tok.text); // toujours différé à la mesure suivante (comme RIFF)
         break;
       }
@@ -20650,7 +20836,20 @@ function _doIrealImportAsSetlist(songDataList){
 
   const irealModal=document.getElementById('ireal-import-modal');
   if(irealModal) irealModal.remove();
-  openSetlistEditor(sl);
+
+  if(confirm('Setlist "'+sl.name+'" créée et enregistrée.\nVeux-tu l\'ouvrir maintenant, en commençant par le premier morceau ?')){
+    // Équivalent de setlistLoadTrack(0), sans sa propre confirmation "Ouvrir X ?"
+    // (déjà confirmé juste au-dessus) — même mécanisme que la navigation
+    // suivant/précédent d'une setlist.
+    _loadedFromSetlist={setlistId:sl.id,trackIndex:0};
+    _restoreData(JSON.parse(JSON.stringify(sl.tracks[0].data)));
+    _plNavBaselineSnapshot=_plSnapshotForCompare();
+    _syncSetlistUpdateMenuItem();
+    _syncPlNavButtons();
+    _showSaveStatus('✓ "'+(sl.tracks[0].title||'Sans titre')+'" ouvert');
+  } else {
+    openSetlistEditor(sl);
+  }
 }
 
 function importJSON(){
