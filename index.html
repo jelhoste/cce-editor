@@ -1377,6 +1377,7 @@ ${p}
           <option value="ipad">iPad</option>
           <option disabled>──</option>
           <option value="tab169p">Android 16:9↕</option><option value="tab169l">Android 16:9↔</option>
+          <option value="tab53p">Android 5:3↕</option><option value="tab53l">Android 5:3↔</option>
           <option value="tab1610p">Android 16:10↕</option><option value="tab1610l">Android 16:10↔</option>
           <option value="tab43p">Tab 4:3↕</option><option value="tab43l">Tab 4:3↔</option>
           <option disabled>──</option>
@@ -1785,6 +1786,7 @@ ${p}
           <option value="ipad">iPad (4:3)</option>
           <option disabled>──</option>
           <option value="tab169p">Android 16:9 ↕</option><option value="tab169l">Android 16:9 ↔</option>
+          <option value="tab53p">Android 5:3 ↕</option><option value="tab53l">Android 5:3 ↔</option>
           <option value="tab1610p">Android 16:10 ↕</option><option value="tab1610l">Android 16:10 ↔</option>
           <option value="tab43p">4:3 ↕</option><option value="tab43l">4:3 ↔</option>
           <option disabled>──</option>
@@ -3806,6 +3808,8 @@ const FORMATS={
   // Tablettes Android courantes
   tab169p:[175,311],   // 16:9 portrait (Samsung Galaxy Tab A/S serie)
   tab169l:[311,175],   // 16:9 paysage
+  tab53p:[195,325],    // 5:3 portrait
+  tab53l:[325,195],    // 5:3 paysage
   tab1610p:[195,312],  // 16:10 portrait (Lenovo, Huawei...)
   tab1610l:[312,195],  // 16:10 paysage
   tab43p:[210,280],    // 4:3 portrait (proche iPad)
@@ -18894,6 +18898,26 @@ function renderFreeBlock(block, pageInnerW){
 }
 
 // ════ VERSIONS ════════════════════════════════════════════
+// Liste complète des variables CSS personnalisables sauvegardées au niveau
+// du fichier (utilisée à la fois pour la sauvegarde et, avant restauration
+// d'un autre morceau, pour remettre chaque propriété à sa valeur par défaut
+// — sinon un réglage jamais personnalisé sur le morceau chargé continue
+// silencieusement d'afficher la valeur laissée par le morceau précédent).
+const SAVE_TYPO_KEYS=[
+  '--typo-chord-family','--typo-chord-weight','--typo-annot-family','--typo-annot-size',
+  '--typo-annot-style','--typo-title-family','--typo-title-size','--typo-title-weight',
+  '--typo-section-family','--typo-section-size','--typo-sym-size','--typo-sym-weight',
+  '--typo-sym-family',
+  '--chord-pad','--chord-fill','--chord-qual-offset','--chord-letter-spacing',
+  '--chord-sup-offset','--chord-sup-offset-accid','--chord-bass-offset',
+  '--chord-offset-x','--chord-accid-scale','--chord-accid-gap','--nc-letter-spacing',
+  '--barline-w','--barline-bold-w','--barline-dot-r',
+  '--volta-w','--volta-size','--volta-weight','--volta-radius','--volta-bracket-h','--volta-font',
+  '--repeat-c','--volta-c','--ped-c','--section-c','--sym-c','--ts-c',
+  '--ov-offset-volta','--ov-offset-section','--ov-offset-annot','--ov-offset-sym',
+  '--overlay-pad-top','--overlay-pad-extra','--overlay-extra-h',
+  '--rc-size','--rc-offset-x','--rc-offset-y',
+];
 const TYPO_KEYS=['--typo-chord-family','--typo-chord-weight','--typo-annot-family',
   '--typo-annot-size','--typo-annot-style','--typo-title-family','--typo-title-size',
   '--typo-title-weight','--typo-section-family','--typo-section-size','--chord-pad',
@@ -19937,24 +19961,8 @@ let _autosaveTimer=null;
 function _buildSaveData(){
   const R=document.documentElement;
   const typo={};
-  // Toutes les variables CSS personnalisables
-  [
-    '--typo-chord-family','--typo-chord-weight','--typo-annot-family','--typo-annot-size',
-    '--typo-annot-style','--typo-title-family','--typo-title-size','--typo-title-weight',
-    '--typo-section-family','--typo-section-size','--typo-sym-size','--typo-sym-weight',
-    '--typo-sym-family',
-    '--chord-pad','--chord-fill','--chord-qual-offset','--chord-letter-spacing',
-    '--chord-pad','--chord-fill',
-    '--chord-sup-offset','--chord-sup-offset-accid','--chord-bass-offset',
-    '--chord-offset-x','--chord-accid-scale','--chord-accid-gap','--nc-letter-spacing',
-    '--barline-w','--barline-bold-w','--barline-dot-r',
-    '--volta-w','--volta-size','--volta-weight','--volta-radius','--volta-bracket-h','--volta-font',
-    '--repeat-c','--volta-c','--ped-c','--section-c','--sym-c','--ts-c',
-    '--ov-offset-volta','--ov-offset-section','--ov-offset-annot','--ov-offset-sym',
-    '--overlay-pad-top','--overlay-pad-extra','--overlay-extra-h',
-    '--rc-size','--rc-offset-x','--rc-offset-y',
-    '--volta-font',
-  ].forEach(p=>{ const v=R.style.getPropertyValue(p); if(v) typo[p]=v; });
+  // Toutes les variables CSS personnalisables (liste unique, voir SAVE_TYPO_KEYS)
+  SAVE_TYPO_KEYS.forEach(p=>{ const v=R.style.getPropertyValue(p); if(v) typo[p]=v; });
   const sliders={
     scale:document.getElementById('scale-sl').value,
     rowh:document.getElementById('rowh-sl').value,
@@ -19990,7 +19998,7 @@ function _buildSaveData(){
    'ty-bw','ty-bbw','ty-dr','ty-vw','ty-vs','ty-vr','ty-vbh','ty-vf',
    'ty-rc','ty-vc','ty-pc','ty-sc','ty-symc','ty-tsc',
    'ty-ov-volta','ty-ov-sec','ty-ov-annot','ty-ov-sym',
-   'ty-ov-pad-top','ty-ov-pad-extra','ty-ov-extra-h',
+   'ty-opt','ty-ope','ty-ovh',
    'ty-rc-size','ty-rc-x','ty-rc-y','ty-simile-size','ty-nc-ls',
    'fmt-pad-mm','ty-chord-ox','ty-accid-sc','ty-accid-gap',
    'ty-chord-ls','ty-chord-sup','ty-chord-sup-a','ty-chord-bass','s-phtag-scale',
@@ -20025,6 +20033,11 @@ function _restoreData(data){
   else { versions=[]; currentVersionId=null; }
   if(data.lyricsSplitView!=null) _lyricsSplitView=!!data.lyricsSplitView;
   if(data.theme) setTheme(data.theme);
+  // Remet chaque réglage personnalisable à sa valeur par défaut AVANT
+  // d'appliquer celles du morceau chargé — sinon un réglage jamais
+  // personnalisé sur ce morceau hériterait silencieusement de la valeur
+  // laissée par le morceau précédemment ouvert dans la même session.
+  { const R0=document.documentElement; SAVE_TYPO_KEYS.forEach(k=>R0.style.removeProperty(k)); }
   if(data.typo){ const R=document.documentElement; Object.entries(data.typo).forEach(([k,v])=>{if(v)R.style.setProperty(k,v)}); }
   if(data.alignMode){ alignMode=data.alignMode; document.getElementById('am-'+alignMode).checked=true; }
   if(data.widthFactors){ widthFactors=data.widthFactors; [1,2,3,4,5].forEach(n=>{const el=document.getElementById('wf'+n);if(el)el.value=widthFactors[n]}); }
@@ -20048,7 +20061,7 @@ function _restoreData(data){
     if(typeof applyBarlineStyle==='function') applyBarlineStyle();
     if(typeof applyVoltaStyle==='function') applyVoltaStyle();
     if(typeof applyRepeatCountStyle==='function') applyRepeatCountStyle();
-    if(typeof applyOverlayOffsets==='function') applyOverlayOffsets();
+    if(typeof applyOverlaySettings==='function') applyOverlaySettings();
     if(typeof applyPagePad==='function') applyPagePad();
     if(typeof applySimileSize==='function') applySimileSize();
     if(typeof applyNcLetterSpacing==='function') applyNcLetterSpacing();
