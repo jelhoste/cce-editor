@@ -12229,7 +12229,7 @@ function renderDrumsInto(svg,m,W,interactive,zoom,showClef=true,SP=1.0){
                              :(drawB[val2]||drawB.q)(svg,baseX,noteY,stemH,col));
       }
 
-      if(nt.dot) g.appendChild(svgEl('circle',{cx:baseX+NR+9,cy:noteY,r:2,fill:col}));
+      if(nt.dot){ const _ds=NR/5; g.appendChild(svgEl('circle',{cx:baseX+NR+9*_ds,cy:noteY,r:Math.max(0.8,2*_ds),fill:col})); }
 
       if(interactive){
         g.style.cursor='pointer';
@@ -14768,7 +14768,7 @@ function renderRhythmInto(svg, m, W, interactive){
         } else {
           g.appendChild(nt.rythm ? drawRythmRonde(svg,baseX,NOTE_Y,col) : drawRonde(svg,baseX,NOTE_Y,col));
         }
-        if(nt.dot) g.appendChild(svgEl('circle',{cx:baseX+NR+4,cy:NOTE_Y-1,r:2,fill:col}));
+        if(nt.dot){ const _ds=_rsc; g.appendChild(svgEl('circle',{cx:baseX+NR+4*_ds,cy:NOTE_Y-1*_ds,r:Math.max(0.8,2*_ds),fill:col})); }
       if(nt.paren) g.appendChild(drawParen(baseX,NOTE_Y,NR,col));
       }
 
