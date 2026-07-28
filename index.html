@@ -98,6 +98,7 @@
   --typo-annot-size:20px; --typo-annot-style:normal;
   --typo-title-family:'Fraunces',Georgia,serif;
   --typo-title-size:28px; --typo-title-weight:600;
+  --typo-composer-size:13.6px; --typo-arranger-size:13.6px;
   --typo-section-family:'JetBrains Mono',monospace;
   --typo-section-size:15px;
   --typo-sym-size:20px;
@@ -322,6 +323,8 @@ body{font-family:var(--font-body);background:var(--bg);color:var(--ink);
   font-weight:var(--typo-title-weight);color:var(--ink);line-height:1.1;white-space:pre-wrap}
 .ph-title[onclick]:hover{opacity:.75}
 .ph-sub{font-size:.85rem;color:var(--ink2);margin-top:.1rem;font-family:var(--font-body);white-space:pre-wrap}
+.ph-composer{font-size:var(--typo-composer-size,.85rem)}
+.ph-arranger{font-size:var(--typo-arranger-size,.85rem)}
 .ph-tag[onclick]:hover{opacity:.75;border-color:var(--accent)}
 .ph-tags{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.22rem}
 .ph-tag{font-family:var(--font-mono);font-size:calc(.58rem * var(--ph-tag-scale));background:var(--ui);border:1px solid var(--rule);
@@ -1863,6 +1866,26 @@ ${p}
       <div class="fg"><label class="fl">Arrangeur</label>
         <div class="rt-bar"><button class="rt-btn" onmousedown="event.preventDefault();rtFormat('b','s-arranger',autoSaveSettings)"><b>B</b></button><button class="rt-btn" onmousedown="event.preventDefault();rtFormat('i','s-arranger',autoSaveSettings)"><i>I</i></button><button class="rt-btn" onmousedown="event.preventDefault();rtFormat('u','s-arranger',autoSaveSettings)"><u>U</u></button></div>
         <input type="text" class="fi" id="s-arranger" oninput="autoSaveSettings()"></div>
+    </div>
+    <div class="frow" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:.35rem">
+      <div class="fg"><label class="fl">Taille titre (px)</label>
+        <div class="stepper">
+          <button class="step-btn left" onclick="stepVal('s-title-size',-1,applyTitleSubSizes)">−</button>
+          <input type="number" class="fi" id="s-title-size" value="28" min="10" max="60" step="1" oninput="applyTitleSubSizes()">
+          <button class="step-btn right" onclick="stepVal('s-title-size',1,applyTitleSubSizes)">+</button>
+        </div></div>
+      <div class="fg"><label class="fl">Taille compositeur (px)</label>
+        <div class="stepper">
+          <button class="step-btn left" onclick="stepVal('s-composer-size',-1,applyTitleSubSizes)">−</button>
+          <input type="number" class="fi" id="s-composer-size" value="14" min="6" max="40" step="1" oninput="applyTitleSubSizes()">
+          <button class="step-btn right" onclick="stepVal('s-composer-size',1,applyTitleSubSizes)">+</button>
+        </div></div>
+      <div class="fg"><label class="fl">Taille arrangeur (px)</label>
+        <div class="stepper">
+          <button class="step-btn left" onclick="stepVal('s-arranger-size',-1,applyTitleSubSizes)">−</button>
+          <input type="number" class="fi" id="s-arranger-size" value="14" min="6" max="40" step="1" oninput="applyTitleSubSizes()">
+          <button class="step-btn right" onclick="stepVal('s-arranger-size',1,applyTitleSubSizes)">+</button>
+        </div></div>
     </div>
     <div class="frow" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr;margin-bottom:.35rem">
       <div class="fg"><label class="fl">Tonalité</label>
@@ -5113,7 +5136,7 @@ function renderLyricsPage(v){
     hdr.className='page-header';
     hdr.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
       <div class="ph-title" onclick="lyricsCleanup();openTypo();typoTab('proprietes')" title="Modifier les propriétés" style="cursor:pointer">${s.title||'Sans titre'}</div>
-      ${s.composer?`<span class="ph-sub">${s.composer}</span>`:''}
+      ${s.composer?`<span class="ph-sub ph-composer">${s.composer}</span>`:''}
     </div>
     <div class="ph-tags">
       ${s.key?`<span class="ph-tag">Ton. <b>${(state.transposeDisplay&&state.transposeDisplay!==0)?transposeKey(s.key,state.transposeDisplay,state.transposeDisplayFlat||false):s.key}</b></span>`:''}
@@ -5825,7 +5848,7 @@ function renderDiagOnlyPage(v){
   hdr.className='page-header';
   hdr.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:.5rem">
     <div class="ph-title" onclick="openTypo();typoTab('proprietes')" title="Modifier les propriétés" style="cursor:pointer">${s.title||'Sans titre'}</div>
-    ${(s.composer)?`<span class="ph-sub">${s.composer}</span>`:''}
+    ${(s.composer)?`<span class="ph-sub ph-composer">${s.composer}</span>`:''}
   </div>
   <div class="ph-tags">
     ${s.key?`<span class="ph-tag">Ton. <b>${(state.transposeDisplay&&state.transposeDisplay!==0)?transposeKey(s.key,state.transposeDisplay,state.transposeDisplayFlat||false):s.key}</b></span>`:''}
@@ -9996,6 +10019,10 @@ function typoTab(id){
     setv('s-title',s.title); setv('s-composer',s.composer); setv('s-arranger',s.arranger);
     setv('s-key',s.key); setv('s-tempo',s.tempo||120); setv('s-style',s.style);
     setv('s-capo',s.capo||0); setv('s-notes',s.notes);
+    const cs=getComputedStyle(document.documentElement);
+    setv('s-title-size',parseFloat(cs.getPropertyValue('--typo-title-size'))||28);
+    setv('s-composer-size',parseFloat(cs.getPropertyValue('--typo-composer-size'))||13.6);
+    setv('s-arranger-size',parseFloat(cs.getPropertyValue('--typo-arranger-size'))||13.6);
   }
   // Synchroniser les valeurs de l'onglet Format
   if(id==='format'){
@@ -10006,6 +10033,20 @@ function typoTab(id){
     sync('scale-sl2','scale-sl');
     sync('rowh-sl2','rowh-sl');
   }
+}
+// Taille du titre / compositeur / arrangeur, réglable directement depuis
+// l'onglet Propriétés (le titre partage la même variable CSS que le champ
+// équivalent de l'onglet Typographie — on les garde synchronisés).
+function applyTitleSubSizes(){
+  const R=document.documentElement;
+  const ts=parseFloat(document.getElementById('s-title-size')?.value)||28;
+  const cs=parseFloat(document.getElementById('s-composer-size')?.value)||13.6;
+  const as=parseFloat(document.getElementById('s-arranger-size')?.value)||13.6;
+  R.style.setProperty('--typo-title-size',ts+'px');
+  R.style.setProperty('--typo-composer-size',cs+'px');
+  R.style.setProperty('--typo-arranger-size',as+'px');
+  const tyTs=document.getElementById('ty-ts'); if(tyTs) tyTs.value=ts;
+  reflow();
 }
 function previewTypo(){
   const R=document.documentElement;
@@ -10022,6 +10063,7 @@ function previewTypo(){
   R.style.setProperty('--typo-title-family',document.getElementById('ty-tf').value);
   R.style.setProperty('--typo-title-size',tsPx+'px');
   R.style.setProperty('--typo-title-weight',document.getElementById('ty-tw').value);
+  const sTs=document.getElementById('s-title-size'); if(sTs) sTs.value=tsPx;
   const ssPx=parseFloat(document.getElementById('ty-ss').value)||9;
   R.style.setProperty('--typo-section-family',document.getElementById('ty-sf').value);
   R.style.setProperty('--typo-section-size',ssPx+'px');
@@ -17339,8 +17381,8 @@ function reflow(){
           <div class="ph-title" onclick="openTypo();typoTab('proprietes')" title="Modifier les propriétés" style="cursor:pointer">${s.title||'Sans titre'}</div>
           ${(s.composer||s.arranger)?`
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.1rem;flex-shrink:0;cursor:pointer" onclick="openTypo();typoTab('proprietes')" title="Modifier les propriétés">
-            ${s.composer?`<span class="ph-sub" style="margin-top:0">${s.composer}</span>`:''}
-            ${s.arranger?`<span class="ph-sub" style="margin-top:0;font-style:italic">${s.arranger}</span>`:''}
+            ${s.composer?`<span class="ph-sub ph-composer" style="margin-top:0">${s.composer}</span>`:''}
+            ${s.arranger?`<span class="ph-sub ph-arranger" style="margin-top:0;font-style:italic">${s.arranger}</span>`:''}
           </div>`:''}
         </div>
         <div class="ph-tags">
@@ -19015,6 +19057,7 @@ function renderFreeBlock(block, pageInnerW){
 const SAVE_TYPO_KEYS=[
   '--typo-chord-family','--typo-chord-weight','--typo-annot-family','--typo-annot-size',
   '--typo-annot-style','--typo-title-family','--typo-title-size','--typo-title-weight',
+  '--typo-composer-size','--typo-arranger-size',
   '--typo-section-family','--typo-section-size','--typo-sym-size','--typo-sym-weight',
   '--typo-sym-family',
   '--chord-pad','--chord-fill','--chord-qual-offset','--chord-letter-spacing',
@@ -19029,6 +19072,7 @@ const SAVE_TYPO_KEYS=[
 ];
 const TYPO_KEYS=['--typo-chord-family','--typo-chord-weight','--typo-annot-family',
   '--typo-annot-size','--typo-annot-style','--typo-title-family','--typo-title-size',
+  '--typo-composer-size','--typo-arranger-size',
   '--typo-title-weight','--typo-section-family','--typo-section-size','--chord-pad',
   '--chord-fill','--chord-letter-spacing','--chord-offset-x','--chord-accid-scale',
   '--chord-accid-gap','--barline-w','--barline-bold-w','--barline-dot-r',
