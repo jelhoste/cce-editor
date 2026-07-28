@@ -2,7 +2,7 @@
 // IMPORTANT : incrémenter CACHE_VERSION à chaque nouvelle mise en ligne
 // de chord-chart-editor-MKII-24.html, sinon les utilisateurs ayant
 // installé l'app continueront de voir l'ancienne version en cache.
-const CACHE_VERSION = 'cce-editor-v8';
+const CACHE_VERSION = 'cce-editor-v9';
 const PRECACHE_URLS = [
   './index.html',
   './manifest-editor.json',
