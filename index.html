@@ -2622,8 +2622,52 @@ ${p}
     <input type="color" id="sec-color" class="fi" value="#cc2200" title="Couleur de cette section"
       style="width:28px;height:28px;padding:0;border-radius:4px;cursor:pointer;margin-left:.3rem" oninput="applySecPanel()">
     <button class="ty-tab" onclick="resetSecColor()" title="Revenir à la couleur globale">⟲</button>
+    <span style="display:flex;align-items:center;gap:.25rem;margin-left:.3rem">
+      <input type="checkbox" id="sec-tempo-chk" onchange="secToggleTempo();applySecPanel()" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent)">
+      <label for="sec-tempo-chk" style="font-family:var(--font-mono);font-size:.58rem;color:var(--ink2);cursor:pointer">Tempo</label>
+    </span>
     <button class="ty-tab ty-tab-reset" onclick="clearSecPanel()">Effacer</button>
     <button class="ty-tab ty-tab-close" onclick="closeSecPanel()">✕</button>
+  </div>
+  <div id="sec-tempo-row" style="display:none;padding:.4rem .7rem;gap:1rem;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--rule)">
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <span class="fl" style="margin:0">BPM</span>
+      <div class="stepper" style="width:110px">
+        <button class="step-btn left" onclick="stepVal('sec-tempo-val',-1,applySecPanel)">−</button>
+        <input type="number" class="fi" id="sec-tempo-val" value="120" min="20" max="320" step="1" oninput="applySecPanel()">
+        <button class="step-btn right" onclick="stepVal('sec-tempo-val',1,applySecPanel)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <span class="fl" style="margin:0">Couleur carré</span>
+      <input type="color" id="sec-tempo-color" class="fi" value="#cc2200"
+        style="width:28px;height:28px;padding:0;border-radius:4px;cursor:pointer" oninput="applySecPanel()">
+      <button class="ty-tab" onclick="resetSecTempoColor()" title="Revenir à la couleur de la section">⟲</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <span class="fl" style="margin:0">Taille carré (px)</span>
+      <div class="stepper" style="width:110px">
+        <button class="step-btn left" onclick="stepVal('sec-tempo-size',-1,applySecPanel)">−</button>
+        <input type="number" class="fi" id="sec-tempo-size" value="20" min="4" max="80" step="1" oninput="applySecPanel()">
+        <button class="step-btn right" onclick="stepVal('sec-tempo-size',1,applySecPanel)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <span class="fl" style="margin:0">Décalage X</span>
+      <div class="stepper" style="width:110px">
+        <button class="step-btn left" onclick="stepVal('sec-tempo-ox',-1,applySecPanel)">−</button>
+        <input type="number" class="fi" id="sec-tempo-ox" value="0" min="-200" max="200" step="1" oninput="applySecPanel()">
+        <button class="step-btn right" onclick="stepVal('sec-tempo-ox',1,applySecPanel)">+</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem">
+      <span class="fl" style="margin:0">Décalage Y</span>
+      <div class="stepper" style="width:110px">
+        <button class="step-btn left" onclick="stepVal('sec-tempo-oy',-1,applySecPanel)">−</button>
+        <input type="number" class="fi" id="sec-tempo-oy" value="0" min="-200" max="200" step="1" oninput="applySecPanel()">
+        <button class="step-btn right" onclick="stepVal('sec-tempo-oy',1,applySecPanel)">+</button>
+      </div>
+    </div>
   </div>
   <div style="padding:.5rem .7rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:.4rem">
@@ -3651,6 +3695,7 @@ ${p}
       <span style="font-family:var(--font-mono);font-size:.75rem;font-weight:700;color:var(--ink)">🎵 Setlists</span>
       <button class="tbtn" onclick="setlistNew()" style="font-size:.58rem">+ Nouvelle</button>
       <button class="tbtn" onclick="setlistImport()" style="font-size:.58rem">⬆ Importer</button>
+      <button class="tbtn" onclick="openSetlistAssembler()" style="font-size:.58rem" title="Composer une setlist à partir de plusieurs sources (setlists CCE, playlists iReal Pro)">🧩 Assembler</button>
       <button class="tbtn" onclick="closeSetlistModal()" style="margin-left:auto">✕</button>
     </div>
     <div id="setlist-list" style="overflow-y:auto;flex:1;padding:.5rem .7rem;display:flex;flex-direction:column;gap:.4rem"></div>
@@ -3669,6 +3714,11 @@ ${p}
       <button class="tbtn" onclick="setlistAddCurrent()" style="font-size:.58rem" title="Ajouter le morceau courant">+ Morceau courant</button>
       <button class="tbtn" onclick="setlistAddFromSaved()" style="font-size:.58rem" title="Ajouter depuis les grilles sauvegardées">+ Depuis grilles</button>
       <button class="tbtn" onclick="setlistAddFromFile()" style="font-size:.58rem" title="Ajouter depuis un fichier .cce.json">+ Fichier</button>
+    </div>
+    <div style="padding:.3rem .7rem 0;flex-shrink:0;display:flex;gap:.4rem;flex-wrap:wrap">
+      <button class="tbtn" onclick="setlistSelectAllTracks(true)" style="font-size:.58rem">Tout</button>
+      <button class="tbtn" onclick="setlistSelectAllTracks(false)" style="font-size:.58rem">Aucun</button>
+      <button class="tbtn" onclick="setlistMergeSelected()" style="font-size:.58rem" title="Concatène les morceaux cochés ci-dessous en un seul, à leur emplacement dans la liste">🔗 Fusionner la sélection</button>
     </div>
     <div id="setlist-tracks" style="overflow-y:auto;flex:1;padding:.5rem .7rem;display:flex;flex-direction:column;gap:.3rem"></div>
     <div style="display:flex;gap:.5rem;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap">
@@ -6109,6 +6159,7 @@ function renderSetlistTracks(){
     row.style.cssText=`display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;
       border:1px solid var(--rule);border-radius:var(--r);background:var(--ui)`;
     row.innerHTML=`
+      <input type="checkbox" class="sme-merge-chk" data-idx="${i}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)">
       <span style="font-family:var(--font-mono);font-size:.6rem;color:var(--ink3);min-width:18px">${i+1}.</span>
       <div style="flex:1;min-width:0">
         <div style="font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--ink);
@@ -10123,11 +10174,25 @@ function openSecPanel(idx){
   speHighlightStyle(_spStyle);
   const secColorInp=document.getElementById('sec-color');
   if(secColorInp) secColorInp.value=so.color||getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
+  const tempoChk=document.getElementById('sec-tempo-chk');
+  if(tempoChk) tempoChk.checked=!!so.tempo;
+  document.getElementById('sec-tempo-val').value=so.tempo||120;
+  document.getElementById('sec-tempo-size').value=so.tempoSize||20;
+  document.getElementById('sec-tempo-ox').value=so.tempoOffsetX||0;
+  document.getElementById('sec-tempo-oy').value=so.tempoOffsetY||0;
+  const tempoColorInp=document.getElementById('sec-tempo-color');
+  if(tempoColorInp) tempoColorInp.value=so.tempoColor||so.color||getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
+  secToggleTempo();
   closeAllPanels();
   document.getElementById('sec-panel').style.display='block';
   focusIfNotTouch(document.getElementById('sec-panel-inp'));
 }
 function closeSecPanel(){ document.getElementById('sec-panel').style.display='none'; _secPanelIdx=null; }
+function secToggleTempo(){
+  const chk=document.getElementById('sec-tempo-chk');
+  const row=document.getElementById('sec-tempo-row');
+  if(row) row.style.display=(chk&&chk.checked)?'flex':'none';
+}
 function speSetAlign(a){ _spAlign=a; speHighlightAlign(a); applySecPanel(); }
 function speHighlightAlign(a){
   ['left','center','right'].forEach(v=>{
@@ -10162,6 +10227,7 @@ function applySecPanel(){
   if(!text){ m.section=null; }
   else{
     const cur=secObj(m.section)||{};
+    const tempoOn=document.getElementById('sec-tempo-chk')?.checked;
     m.section={...cur,
       text,
       align:_spAlign,
@@ -10170,8 +10236,22 @@ function applySecPanel(){
       offsetX:parseFloat(document.getElementById('sec-ox')?.value)||0,
       offsetY:parseFloat(document.getElementById('sec-oy')?.value)||0,
       color:document.getElementById('sec-color')?.value||null,
+      tempo:tempoOn?(parseInt(document.getElementById('sec-tempo-val')?.value)||120):null,
+      tempoColor:tempoOn?(document.getElementById('sec-tempo-color')?.value||null):null,
+      tempoSize:tempoOn?(parseFloat(document.getElementById('sec-tempo-size')?.value)||20):null,
+      tempoOffsetX:tempoOn?(parseFloat(document.getElementById('sec-tempo-ox')?.value)||0):0,
+      tempoOffsetY:tempoOn?(parseFloat(document.getElementById('sec-tempo-oy')?.value)||0):0,
     };
   }
+  reflow();
+}
+function resetSecTempoColor(){
+  if(_secPanelIdx===null) return;
+  const m=state.measures[_secPanelIdx];
+  if(m.section){ const so=secObj(m.section); delete so.tempoColor; m.section=so; }
+  const tempoColorInp=document.getElementById('sec-tempo-color');
+  const so=secObj(m.section)||{};
+  if(tempoColorInp) tempoColorInp.value=so.color||getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
   reflow();
 }
 function resetSecColor(){
@@ -17445,32 +17525,61 @@ function reflow(){
         }
         if(m.section){
           const so=secObj(m.section);
-          const s=document.createElement('div');s.className='section-marker'+(so.style==='badge'?' badge':'');
+          const isBadge=so.style==='badge';
+          const s=document.createElement('div');s.className='section-marker'+(isBadge?' badge':'');
           s.innerHTML=so.text||'';
-          // Styles per-mesure
-          if(so.align){
-            // En mode badge : align-self suffit (width:fit-content conservé)
-            // En mode texte : width:100% + textAlign pour que le texte soit bien positionné
-            const isBadge=so.style==='badge';
-            s.style.alignSelf=so.align==='center'?'center':so.align==='right'?'flex-end':'flex-start';
-            if(!isBadge){
-              s.style.textAlign=so.align;
-              s.style.width='100%';
-            }
-          }
           if(so.size) s.style.fontSize=so.size+'px';
           if(so.weight) s.style.fontWeight=so.weight;
           if(so.fontStyle) s.style.fontStyle=so.fontStyle;
           if(so.font) s.style.fontFamily=so.font;
           if(so.color){
-            if(so.style==='badge'){ s.style.background=so.color; s.style.borderColor=so.color; }
+            if(isBadge){ s.style.background=so.color; s.style.borderColor=so.color; }
             else { s.style.color=so.color; }
           }
           if(so.offsetX||so.offsetY) s.style.transform=`translate(${so.offsetX||0}px,${so.offsetY||0}px)`;
           s.style.cursor='pointer';s.title='Cliquer pour modifier';
           s.addEventListener('click',e=>{e.stopPropagation();if(_multiMode){toggleMultiSel(idx);return;}select(idx);openSecPanel(idx);});
           s.addEventListener('dblclick',e=>{e.stopPropagation();select(idx);openSecEditor(idx);});
-          ov.appendChild(s);
+
+          let mounted=s; // élément réellement ajouté à ov (s seul, ou un groupe titre+carré)
+          if(so.tempo){
+            // Le carré de tempo doit rester EN DEHORS de la boîte colorée du
+            // badge (sinon le fond s'étire dessous) — on les place donc côte
+            // à côte dans un petit groupe, plutôt que d'ajouter le carré
+            // comme enfant direct du badge.
+            const wrap=document.createElement('div');
+            wrap.style.cssText='display:inline-flex;align-items:center;gap:6px';
+            wrap.appendChild(s);
+            const sq=document.createElement('span');
+            sq.className='sec-tempo-square';
+            const sz=so.tempoSize||20;
+            sq.style.cssText=`display:inline-block;width:${sz}px;height:${sz}px;flex-shrink:0;
+              border-radius:2px;background:${so.tempoColor||so.color||'currentColor'}`;
+            if(so.tempoOffsetX||so.tempoOffsetY) sq.style.transform=`translate(${so.tempoOffsetX||0}px,${so.tempoOffsetY||0}px)`;
+            sq.title=so.tempo+' BPM';
+            wrap.appendChild(sq);
+            mounted=wrap;
+          }
+          // Styles per-mesure — alignement appliqué à l'élément réellement
+          // monté (le groupe titre+carré s'il existe, sinon le titre seul),
+          // pour que le carré suive la même position que le titre.
+          if(so.align){
+            // En mode badge : align-self suffit (width:fit-content conservé)
+            // En mode texte : width:100% + textAlign pour que le texte soit bien positionné
+            mounted.style.alignSelf=so.align==='center'?'center':so.align==='right'?'flex-end':'flex-start';
+            if(!isBadge){
+              if(mounted===s){
+                s.style.textAlign=so.align;
+                s.style.width='100%';
+              } else {
+                // Groupe titre+carré en mode texte : on centre/aligne le
+                // groupe entier plutôt que le texte seul à l'intérieur.
+                mounted.style.width='100%';
+                mounted.style.justifyContent=so.align==='center'?'center':so.align==='right'?'flex-end':'flex-start';
+              }
+            }
+          }
+          ov.appendChild(mounted);
         }
         if(m.symbols&&m.symbols.length){
           const sr=document.createElement('div');sr.className='sym-row';
@@ -20792,32 +20901,12 @@ function _doIrealImport(song){
   _showSaveStatus('✓ Morceau importé depuis iReal Pro');
 }
 
-// Convertit une playlist iReal Pro entière en une NOUVELLE setlist CCE : un
-// morceau par piste iReal, chacun avec une seule version (marquée comme
-// principale). Ne touche jamais au fichier actuellement ouvert dans
-// l'éditeur — construit des fichiers CCE complets et indépendants, un par
-// morceau, uniquement en mémoire, avant de les ranger dans la setlist.
-function _doIrealImportAsSetlist(songDataList){
-  // iReal Pro ne transporte que la grille — pas de mise en forme (typo,
-  // tailles de notation…). On reprend donc les réglages ACTUELLEMENT actifs
-  // dans l'éditeur comme modèle commun à tous les morceaux importés.
-  const baseline=_buildSaveData();
-  const built=[];
-  let failCount=0;
-  songDataList.forEach(data=>{
-    let song=null;
-    try{ song=irealBuildSong(data); }catch(e){ song=null; }
-    if(song) built.push(song); else failCount++;
-  });
-  if(!built.length){
-    alert('Aucun morceau exploitable dans cette playlist.');
-    return;
-  }
-  const defaultName='Playlist iReal Pro ('+built.length+' morceaux)';
-  const name=prompt('Nom de la nouvelle setlist :',defaultName);
-  if(name===null) return; // annulé
-
-  const tracks=built.map(song=>{
+// Convertit une liste de morceaux iReal déjà "build" (irealBuildSong) en
+// pistes de setlist CCE ({title,data}), en partageant les réglages de mise
+// en forme fournis (baseline) entre tous les morceaux — réutilisé à la fois
+// par l'import "playlist entière" et par l'assembleur multi-setlist.
+function _irealSongsToTracks(built, baseline){
+  return built.map(song=>{
     const newState={
       song:{title:song.title||'Sans titre', composer:song.composer||'', arranger:'',
         key:irealKeyToCCE(song.key), tempo:song.bpm||120, style:song.style||'', capo:0, notes:''},
@@ -20839,6 +20928,29 @@ function _doIrealImportAsSetlist(songDataList){
     trackData.savedAt=Date.now();
     return {title:song.title||'Sans titre', data:trackData};
   });
+}
+
+function _doIrealImportAsSetlist(songDataList){
+  // iReal Pro ne transporte que la grille — pas de mise en forme (typo,
+  // tailles de notation…). On reprend donc les réglages ACTUELLEMENT actifs
+  // dans l'éditeur comme modèle commun à tous les morceaux importés.
+  const baseline=_buildSaveData();
+  const built=[];
+  let failCount=0;
+  songDataList.forEach(data=>{
+    let song=null;
+    try{ song=irealBuildSong(data); }catch(e){ song=null; }
+    if(song) built.push(song); else failCount++;
+  });
+  if(!built.length){
+    alert('Aucun morceau exploitable dans cette playlist.');
+    return;
+  }
+  const defaultName='Playlist iReal Pro ('+built.length+' morceaux)';
+  const name=prompt('Nom de la nouvelle setlist :',defaultName);
+  if(name===null) return; // annulé
+
+  const tracks=_irealSongsToTracks(built, baseline);
 
   const sl={id:'sl-'+Date.now(), name:name||defaultName, tracks, savedAt:Date.now()};
   localStorage.setItem(SETLIST_PREFIX+sl.id, JSON.stringify(sl));
@@ -20863,6 +20975,388 @@ function _doIrealImportAsSetlist(songDataList){
   } else {
     openSetlistEditor(sl);
   }
+}
+
+// ════ ASSEMBLEUR MULTI-SETLIST ════════════════════════════════
+// Compose une setlist à partir de plusieurs sources successives (setlists
+// CCE existantes, playlists iReal Pro), avec réordonnancement, avant de
+// choisir soit d'ouvrir directement le résultat (sans l'enregistrer), soit
+// de le transformer en une vraie setlist sauvegardée.
+let _asmStaging=[]; // [{title,data}]
+
+// showModal() ferme systématiquement toute modale déjà ouverte avant d'en
+// afficher une nouvelle — ce qui convient pour une modale isolée, mais pas
+// ici : les sous-fenêtres de choix (setlist, playlist, morceaux) s'ouvrent
+// PAR-DESSUS la fenêtre principale de l'assembleur, qui doit rester en vie
+// en arrière-plan. On les ajoute donc directement, sans passer par
+// showModal().
+function _asmShowSubModal(modal){
+  modal.classList.add('app-modal');
+  document.body.appendChild(modal);
+}
+
+function openSetlistAssembler(){
+  _asmStaging=[];
+  closeSetlistModal();
+  const modal=document.createElement('div');
+  modal.style.cssText=`position:fixed;inset:0;z-index:960;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center`;
+  const inner=document.createElement('div');
+  inner.style.cssText=`background:var(--modal-bg);border-radius:calc(var(--r)*2);width:min(460px,92vw);max-height:86vh;display:flex;flex-direction:column;overflow:hidden`;
+  const head=document.createElement('div');
+  head.style.cssText=`padding:.7rem 1rem;border-bottom:1px solid var(--rule);flex-shrink:0`;
+  head.innerHTML=`<div style="font-family:var(--font-mono);font-size:.72rem;font-weight:700;color:var(--ink)">🧩 Assembler une setlist</div>
+    <div style="font-family:var(--font-mono);font-size:.55rem;color:var(--ink3);margin-top:.2rem">Ajoute des morceaux depuis plusieurs setlists ou playlists, puis réordonne-les</div>`;
+
+  const addRow=document.createElement('div');
+  addRow.style.cssText=`display:flex;gap:.4rem;padding:.5rem .8rem;border-bottom:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap`;
+  const btnFromCCE=document.createElement('button');
+  btnFromCCE.className='tbtn'; btnFromCCE.textContent='+ Setlist CCE'; btnFromCCE.style.fontSize='.6rem';
+  btnFromCCE.onclick=()=>_asmAddFromCCE(inner);
+  const btnFromIreal=document.createElement('button');
+  btnFromIreal.className='tbtn'; btnFromIreal.textContent='+ Playlist iReal Pro'; btnFromIreal.style.fontSize='.6rem';
+  btnFromIreal.onclick=()=>_asmAddFromIreal(inner);
+  addRow.appendChild(btnFromCCE); addRow.appendChild(btnFromIreal);
+
+  const list=document.createElement('div');
+  list.id='asm-list';
+  list.style.cssText=`overflow-y:auto;flex:1;padding:.5rem .8rem;display:flex;flex-direction:column;gap:.4rem`;
+
+  const foot=document.createElement('div');
+  foot.style.cssText=`display:flex;gap:.5rem;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap`;
+  const btnCancel=document.createElement('button');
+  btnCancel.className='tbtn'; btnCancel.textContent='Annuler'; btnCancel.style.cssText='font-size:.62rem;padding:.5rem .7rem';
+  btnCancel.onclick=()=>{ modal.remove(); };
+  const btnOpen=document.createElement('button');
+  btnOpen.id='asm-btn-open'; btnOpen.className='tbtn'; btnOpen.textContent='Ouvrir sans enregistrer';
+  btnOpen.style.cssText='margin-left:auto;font-size:.62rem;padding:.5rem .7rem';
+  btnOpen.onclick=()=>_asmFinalize(false,modal);
+  const btnMerge=document.createElement('button');
+  btnMerge.id='asm-btn-merge'; btnMerge.className='tbtn'; btnMerge.textContent='🔗 Fusionner';
+  btnMerge.title='Concatène les mesures de tous les morceaux à la suite, dans un seul morceau (ouvert directement, pas encore enregistré)';
+  btnMerge.style.cssText='font-size:.62rem;padding:.5rem .7rem';
+  btnMerge.onclick=()=>_asmMerge(modal);
+  const btnSave=document.createElement('button');
+  btnSave.id='asm-btn-save'; btnSave.className='tbtn'; btnSave.textContent='💾 Créer la setlist';
+  btnSave.style.cssText='font-size:.62rem;padding:.5rem .7rem;background:var(--accent);color:var(--acfg);border-color:var(--accent)';
+  btnSave.onclick=()=>_asmFinalize(true,modal);
+  foot.appendChild(btnCancel); foot.appendChild(btnOpen); foot.appendChild(btnMerge); foot.appendChild(btnSave);
+
+  inner.appendChild(head); inner.appendChild(addRow); inner.appendChild(list); inner.appendChild(foot);
+  modal.appendChild(inner);
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  showModal(modal);
+  _asmRender();
+}
+
+function _asmRender(){
+  const list=document.getElementById('asm-list');
+  if(!list) return;
+  list.innerHTML='';
+  const btnOpen=document.getElementById('asm-btn-open');
+  const btnSave=document.getElementById('asm-btn-save');
+  const btnMerge=document.getElementById('asm-btn-merge');
+  if(btnOpen) btnOpen.disabled=!_asmStaging.length;
+  if(btnSave) btnSave.disabled=!_asmStaging.length;
+  if(btnMerge) btnMerge.disabled=!_asmStaging.length;
+  if(!_asmStaging.length){
+    list.innerHTML='<div style="font-family:var(--font-mono);font-size:.6rem;color:var(--ink3);text-align:center;padding:1rem">Aucun morceau ajouté pour l\'instant.</div>';
+    return;
+  }
+  _asmStaging.forEach((track,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText=`display:flex;align-items:center;gap:.5rem;padding:.5rem .6rem;min-height:44px;
+      border:1px solid var(--rule);border-radius:var(--r);background:var(--ui);box-sizing:border-box`;
+    const label=document.createElement('div');
+    label.textContent=(i+1)+'. '+(track.title||'Sans titre');
+    label.style.cssText='flex:1;font-family:var(--font-mono);font-size:.64rem;color:var(--ink)';
+    const btnUp=document.createElement('button');
+    btnUp.className='tbtn'; btnUp.textContent='↑'; btnUp.style.cssText='font-size:.6rem;padding:.4rem .6rem;min-height:36px';
+    btnUp.disabled=(i===0);
+    btnUp.onclick=()=>{ if(i>0){ [_asmStaging[i-1],_asmStaging[i]]=[_asmStaging[i],_asmStaging[i-1]]; _asmRender(); } };
+    const btnDown=document.createElement('button');
+    btnDown.className='tbtn'; btnDown.textContent='↓'; btnDown.style.cssText='font-size:.6rem;padding:.4rem .6rem;min-height:36px';
+    btnDown.disabled=(i===_asmStaging.length-1);
+    btnDown.onclick=()=>{ if(i<_asmStaging.length-1){ [_asmStaging[i+1],_asmStaging[i]]=[_asmStaging[i],_asmStaging[i+1]]; _asmRender(); } };
+    const btnDel=document.createElement('button');
+    btnDel.className='tbtn'; btnDel.textContent='✕'; btnDel.style.cssText='font-size:.6rem;padding:.4rem .6rem;min-height:36px';
+    btnDel.onclick=()=>{ _asmStaging.splice(i,1); _asmRender(); };
+    row.appendChild(label); row.appendChild(btnUp); row.appendChild(btnDown); row.appendChild(btnDel);
+    list.appendChild(row);
+  });
+}
+
+// Sous-sélecteur : choisir une setlist CCE existante, puis cocher les
+// morceaux à ajouter à l'assemblage — même style de case à cocher tactile
+// que pour l'impression de setlist.
+function _asmAddFromCCE(parentInner){
+  const keys=Object.keys(localStorage).filter(k=>k.startsWith(SETLIST_PREFIX));
+  const setlists=keys.map(k=>{ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }).filter(Boolean);
+  if(!setlists.length){ alert('Aucune setlist CCE enregistrée pour l\'instant.'); return; }
+
+  const modal=document.createElement('div');
+  modal.style.cssText=`position:fixed;inset:0;z-index:970;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center`;
+  const inner=document.createElement('div');
+  inner.style.cssText=`background:var(--modal-bg);border-radius:calc(var(--r)*2);width:min(420px,92vw);max-height:82vh;display:flex;flex-direction:column;overflow:hidden`;
+  const head=document.createElement('div');
+  head.style.cssText=`padding:.7rem 1rem;border-bottom:1px solid var(--rule);flex-shrink:0;font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:var(--ink)`;
+  head.textContent='Choisir une setlist CCE';
+  const list=document.createElement('div');
+  list.style.cssText=`overflow-y:auto;flex:1;padding:.5rem .8rem;display:flex;flex-direction:column;gap:.4rem`;
+  setlists.forEach(sl=>{
+    const row=document.createElement('div');
+    row.style.cssText=`padding:.6rem .7rem;min-height:44px;border:1px solid var(--rule);border-radius:var(--r);
+      background:var(--ui);cursor:pointer;display:flex;align-items:center;font-family:var(--font-mono);font-size:.64rem;color:var(--ink)`;
+    row.textContent=(sl.name||'Sans nom')+' ('+(sl.tracks?.length||0)+' morceaux)';
+    row.onclick=()=>{ modal.remove(); _asmPickTracks(sl.tracks||[], t=>t.title||'Sans titre'); };
+    list.appendChild(row);
+  });
+  const foot=document.createElement('div');
+  foot.style.cssText=`display:flex;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0`;
+  const btnCancel=document.createElement('button');
+  btnCancel.className='tbtn'; btnCancel.textContent='Annuler'; btnCancel.style.cssText='font-size:.62rem;margin-left:auto';
+  btnCancel.onclick=()=>modal.remove();
+  foot.appendChild(btnCancel);
+  inner.appendChild(head); inner.appendChild(list); inner.appendChild(foot);
+  modal.appendChild(inner);
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  _asmShowSubModal(modal);
+}
+
+// Sous-sélecteur : choisir une playlist iReal Pro (fichier ou lien collé),
+// puis cocher les morceaux à ajouter à l'assemblage.
+function _asmAddFromIreal(parentInner){
+  const modal=document.createElement('div');
+  modal.style.cssText=`position:fixed;inset:0;z-index:970;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center`;
+  const inner=document.createElement('div');
+  inner.style.cssText=`background:var(--modal-bg);border-radius:calc(var(--r)*2);width:min(420px,92vw);max-height:86vh;display:flex;flex-direction:column;overflow:hidden;padding:.9rem 1rem`;
+  inner.innerHTML=`<div style="font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:var(--ink);margin-bottom:.5rem">Importer une playlist iReal Pro</div>
+    <div style="font-family:var(--font-mono);font-size:.58rem;color:var(--ink3);margin-bottom:.4rem">Choisis un fichier playlist iReal Pro (.html), ou colle un lien irealb://…</div>`;
+  const fileInp=document.createElement('input');
+  fileInp.type='file'; fileInp.accept='.html,.htm';
+  fileInp.style.cssText='display:block;margin:.4rem 0;font-family:var(--font-mono);font-size:.6rem;color:var(--ink)';
+  const linkInp=document.createElement('textarea');
+  linkInp.placeholder='irealb://…'; linkInp.rows=2; linkInp.className='fi';
+  linkInp.style.cssText='width:100%;box-sizing:border-box;font-family:var(--font-mono);font-size:.6rem;resize:vertical;margin-bottom:.5rem';
+  const btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:.5rem';
+  const btnCancel=document.createElement('button');
+  btnCancel.className='tbtn'; btnCancel.textContent='Annuler'; btnCancel.style.cssText='font-size:.62rem;margin-left:auto';
+  btnCancel.onclick=()=>modal.remove();
+  const btnScan=document.createElement('button');
+  btnScan.className='tbtn'; btnScan.textContent='Analyser';
+  btnScan.style.cssText='font-size:.62rem;background:var(--accent);color:var(--acfg);border-color:var(--accent)';
+  btnScan.onclick=()=>{
+    const file=fileInp.files[0];
+    const handle=(text)=>{
+      let songDataList=[]; try{ songDataList=irealExtractSongs(text); }catch(e){ songDataList=[]; }
+      modal.remove();
+      _asmPickTracks(songDataList, data=>{
+        try{ const s=irealBuildSong(data); return s?s.title:'⚠ illisible'; }catch(e){ return '⚠ illisible'; }
+      }, true);
+    };
+    if(file){
+      const reader=new FileReader();
+      reader.onload=ev=>handle(String(ev.target.result));
+      reader.readAsText(file);
+    } else if(linkInp.value.trim()){
+      handle(linkInp.value.trim());
+    } else {
+      alert('Choisis un fichier ou colle un lien.');
+    }
+  };
+  btnRow.appendChild(btnCancel); btnRow.appendChild(btnScan);
+  inner.appendChild(fileInp); inner.appendChild(linkInp); inner.appendChild(btnRow);
+  modal.appendChild(inner);
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  _asmShowSubModal(modal);
+}
+
+// Popup de sélection tactile générique (cases à cocher) : items est soit une
+// liste de pistes CCE ({title,data}), soit une liste de données iReal brutes
+// (isIreal=true) — dans ce dernier cas, chaque item est converti en piste au
+// moment de la validation, pas avant (pour ne pas construire inutilement des
+// morceaux jamais sélectionnés).
+function _asmPickTracks(items, titleFn, isIreal){
+  if(!items.length){ alert('Aucun morceau trouvé.'); return; }
+  const modal=document.createElement('div');
+  modal.style.cssText=`position:fixed;inset:0;z-index:980;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center`;
+  const inner=document.createElement('div');
+  inner.style.cssText=`background:var(--modal-bg);border-radius:calc(var(--r)*2);width:min(420px,92vw);max-height:82vh;display:flex;flex-direction:column;overflow:hidden`;
+  const head=document.createElement('div');
+  head.style.cssText=`padding:.7rem 1rem;border-bottom:1px solid var(--rule);flex-shrink:0;font-family:var(--font-mono);font-size:.68rem;font-weight:700;color:var(--ink)`;
+  head.textContent='Choisir les morceaux à ajouter';
+  const list=document.createElement('div');
+  list.style.cssText=`overflow-y:auto;flex:1;padding:.5rem .8rem;display:flex;flex-direction:column;gap:.4rem`;
+  items.forEach((item,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText=`display:flex;align-items:center;gap:.6rem;padding:.55rem .6rem;min-height:44px;
+      border:1px solid var(--rule);border-radius:var(--r);background:var(--ui);box-sizing:border-box;cursor:pointer`;
+    const chk=document.createElement('input');
+    chk.type='checkbox'; chk.checked=true; chk.id='asmp-chk-'+i;
+    chk.style.cssText='width:22px;height:22px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)';
+    const label=document.createElement('label');
+    label.htmlFor=chk.id; label.textContent=titleFn(item);
+    label.style.cssText='flex:1;font-family:var(--font-mono);font-size:.64rem;color:var(--ink);cursor:pointer;padding:.2rem 0';
+    row.appendChild(chk); row.appendChild(label);
+    row.addEventListener('click',e=>{ if(e.target!==chk) chk.checked=!chk.checked; });
+    list.appendChild(row);
+  });
+  const foot=document.createElement('div');
+  foot.style.cssText=`display:flex;gap:.5rem;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap`;
+  const btnAll=document.createElement('button');
+  btnAll.className='tbtn'; btnAll.textContent='Tout'; btnAll.style.cssText='font-size:.6rem;padding:.5rem .7rem;min-height:38px';
+  btnAll.onclick=()=>{ items.forEach((_,i)=>{ const c=document.getElementById('asmp-chk-'+i); if(c) c.checked=true; }); };
+  const btnNone=document.createElement('button');
+  btnNone.className='tbtn'; btnNone.textContent='Aucun'; btnNone.style.cssText='font-size:.6rem;padding:.5rem .7rem;min-height:38px';
+  btnNone.onclick=()=>{ items.forEach((_,i)=>{ const c=document.getElementById('asmp-chk-'+i); if(c) c.checked=false; }); };
+  const btnCancel=document.createElement('button');
+  btnCancel.className='tbtn'; btnCancel.textContent='Annuler'; btnCancel.style.cssText='font-size:.62rem;margin-left:auto';
+  btnCancel.onclick=()=>modal.remove();
+  const btnAdd=document.createElement('button');
+  btnAdd.className='tbtn'; btnAdd.textContent='Ajouter la sélection';
+  btnAdd.style.cssText='margin-left:auto;font-size:.62rem;background:var(--accent);color:var(--acfg);border-color:var(--accent)';
+  btnAdd.onclick=()=>{
+    const chosen=[];
+    items.forEach((item,i)=>{ const c=document.getElementById('asmp-chk-'+i); if(c&&c.checked) chosen.push(item); });
+    if(!chosen.length){ alert('Sélectionne au moins un morceau.'); return; }
+    if(isIreal){
+      const baseline=_buildSaveData();
+      const built=[];
+      chosen.forEach(data=>{ try{ const s=irealBuildSong(data); if(s) built.push(s); }catch(e){} });
+      const tracks=_irealSongsToTracks(built, baseline);
+      _asmStaging.push(...tracks);
+    } else {
+      // Clone profond : ne jamais partager de référence avec la setlist source.
+      chosen.forEach(t=>_asmStaging.push({title:t.title, data:JSON.parse(JSON.stringify(t.data))}));
+    }
+    modal.remove();
+    _asmRender();
+  };
+  foot.appendChild(btnAll); foot.appendChild(btnNone); foot.appendChild(btnCancel); foot.appendChild(btnAdd);
+  inner.appendChild(head); inner.appendChild(list); inner.appendChild(foot);
+  modal.appendChild(inner);
+  modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  _asmShowSubModal(modal);
+}
+
+// Conclut l'assemblage : soit ouvre directement le premier morceau sans rien
+// enregistrer (aperçu ponctuel, pas de setlist créée, pas de navigation
+// ◀▶ persistante), soit crée une vraie setlist sauvegardée (avec navigation
+// complète, comme n'importe quelle setlist CCE).
+function _asmFinalize(save, modal){
+  if(!_asmStaging.length) return;
+  if(save){
+    const defaultName='Setlist assemblée ('+_asmStaging.length+' morceaux)';
+    const name=prompt('Nom de la nouvelle setlist :',defaultName);
+    if(name===null) return;
+    const sl={id:'sl-'+Date.now(), name:name||defaultName, tracks:_asmStaging, savedAt:Date.now()};
+    localStorage.setItem(SETLIST_PREFIX+sl.id, JSON.stringify(sl));
+    _showSaveStatus('✓ Setlist "'+sl.name+'" créée avec '+_asmStaging.length+' morceau'+(_asmStaging.length>1?'x':''));
+    modal.remove();
+    if(confirm('Setlist "'+sl.name+'" créée et enregistrée.\nVeux-tu l\'ouvrir maintenant, en commençant par le premier morceau ?')){
+      _loadedFromSetlist={setlistId:sl.id,trackIndex:0};
+      _restoreData(JSON.parse(JSON.stringify(sl.tracks[0].data)));
+      _plNavBaselineSnapshot=_plSnapshotForCompare();
+      _syncSetlistUpdateMenuItem();
+      _syncPlNavButtons();
+      _showSaveStatus('✓ "'+(sl.tracks[0].title||'Sans titre')+'" ouvert');
+    }
+  } else {
+    if(!confirm('Ouvrir "'+(_asmStaging[0].title||'Sans titre')+'" sans enregistrer cet assemblage ?\n(Les autres morceaux de la liste ne seront pas accessibles ensuite — pense à "Créer la setlist" si tu veux pouvoir naviguer entre eux.)')) return;
+    _restoreData(JSON.parse(JSON.stringify(_asmStaging[0].data)));
+    // Pas de setlist créée : pas de lien _loadedFromSetlist, donc pas de
+    // flèches de navigation ni de "Mettre à jour" — cohérent avec le choix
+    // explicite de ne rien enregistrer.
+    _loadedFromSetlist=null;
+    _syncSetlistUpdateMenuItem();
+    _syncPlNavButtons();
+    _showSaveStatus('✓ "'+(_asmStaging[0].title||'Sans titre')+'" ouvert (non enregistré)');
+    modal.remove();
+  }
+  _asmStaging=[];
+}
+
+// Fusionne tous les morceaux de l'assemblage en UN SEUL morceau continu :
+// les mesures sont mises bout à bout dans l'ordre de la liste, mais seules
+// les métadonnées (titre, tonalité, tempo, style, capo — les "badges" sous
+// le titre) du PREMIER morceau sont conservées ; celles des suivants sont
+// purement et simplement abandonnées. Ouvre directement le résultat dans
+// l'éditeur, sans l'enregistrer (l'utilisateur choisit s'il veut le garder).
+// Cœur de la fusion : prend une liste ordonnée de pistes ({title,data}) et
+// renvoie UNE piste fusionnée — mesures mises bout à bout, mais seules les
+// métadonnées (titre, tonalité, tempo, style, capo) de la PREMIÈRE piste
+// sont conservées. Ne modifie aucune des pistes d'origine (tout est cloné).
+function _mergeTrackList(tracks){
+  const firstData=JSON.parse(JSON.stringify(tracks[0].data));
+  const mergedMeasures=Array.isArray(firstData.state?.measures)?[...firstData.state.measures]:[];
+  for(let i=1;i<tracks.length;i++){
+    const d=tracks[i].data;
+    if(d && d.state && Array.isArray(d.state.measures)){
+      mergedMeasures.push(...JSON.parse(JSON.stringify(d.state.measures)));
+    }
+  }
+  firstData.state.measures=mergedMeasures;
+  // La version "principale" doit elle aussi refléter les mesures fusionnées
+  // — sinon y revenir explicitement (vLoad) écraserait le résultat par les
+  // mesures d'origine de la première piste seule.
+  if(Array.isArray(firstData.versions)){
+    const v=firstData.versions.find(v=>v.id===firstData.currentVersionId);
+    if(v && v.state) v.state.measures=JSON.parse(JSON.stringify(mergedMeasures));
+  }
+  return {title:tracks[0].title||'Sans titre', data:firstData};
+}
+
+function _asmMerge(modal){
+  if(!_asmStaging.length) return;
+  const names=_asmStaging.map(t=>t.title||'Sans titre').join(' → ');
+  if(!confirm('Fusionner '+_asmStaging.length+' morceau'+(_asmStaging.length>1?'x':'')+' en un seul :\n'+names+'\n\nSeuls le titre, la tonalité, le tempo, le style et le capo du premier morceau seront conservés. Le morceau actuellement ouvert dans l\'éditeur sera remplacé (pense à l\'enregistrer avant si besoin).')) return;
+
+  const merged=_mergeTrackList(_asmStaging);
+  _restoreData(merged.data);
+  // Résultat "libre", pas issu d'une setlist réelle : pas de flèches de
+  // navigation ni de "Mettre à jour" tant qu'il n'a pas été enregistré.
+  _loadedFromSetlist=null;
+  _syncSetlistUpdateMenuItem();
+  _syncPlNavButtons();
+  _showSaveStatus('✓ '+_asmStaging.length+' morceaux fusionnés — pense à l\'enregistrer si tu veux le garder');
+  modal.remove();
+  _asmStaging=[];
+}
+
+// Fusionne les morceaux COCHÉS dans l'éditeur de setlist, à leur emplacement
+// dans la liste — les morceaux non cochés restent inchangés, à leur place.
+// La setlist est réenregistrée automatiquement avec le nouveau contenu.
+function setlistSelectAllTracks(on){
+  document.querySelectorAll('.sme-merge-chk').forEach(c=>{ c.checked=on; });
+}
+function setlistMergeSelected(){
+  if(!_setlistCurrent) return;
+  const checks=Array.from(document.querySelectorAll('.sme-merge-chk'))
+    .filter(c=>c.checked)
+    .map(c=>parseInt(c.dataset.idx))
+    .sort((a,b)=>a-b);
+  if(checks.length<2){
+    alert('Coche au moins 2 morceaux à fusionner.');
+    return;
+  }
+  const selectedTracks=checks.map(i=>_setlistCurrent.tracks[i]);
+  const names=selectedTracks.map(t=>t.title||'Sans titre').join(' → ');
+  if(!confirm('Fusionner ces '+checks.length+' morceaux en un seul, à leur emplacement dans la setlist :\n'+names+'\n\nSeuls le titre, la tonalité, le tempo, le style et le capo du premier seront conservés.')) return;
+
+  const merged=_mergeTrackList(selectedTracks);
+  const firstIdx=checks[0];
+  const checksSet=new Set(checks);
+  const newTracks=[];
+  _setlistCurrent.tracks.forEach((t,i)=>{
+    if(i===firstIdx){ newTracks.push(merged); return; }
+    if(checksSet.has(i)) return; // fusionné ailleurs, on ne le garde pas séparément
+    newTracks.push(t);
+  });
+  _setlistCurrent.tracks=newTracks;
+  _setlistCurrent.savedAt=Date.now();
+  localStorage.setItem(SETLIST_PREFIX+_setlistCurrent.id, JSON.stringify(_setlistCurrent));
+  renderSetlistTracks();
+  _showSaveStatus('✓ '+checks.length+' morceaux fusionnés dans la setlist');
 }
 
 function importJSON(){
