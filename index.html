@@ -2556,6 +2556,7 @@ ${p}
     <button class="ty-tab ty-tab-reset" onclick="symeRemove()">🗑 Suppr.</button>
     <button class="ty-tab ty-tab-close" onclick="closeSymEditor()">✕</button>
   </div>
+  <div id="sym-nearby-bar" style="display:none;align-items:center;gap:4px;padding:.3rem .5rem;border-bottom:1px solid var(--rule);background:var(--ui2);flex-wrap:wrap"></div>
   <div style="padding:.5rem .7rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:.4rem">
       <span class="fl" style="margin:0">Taille (px)</span>
@@ -2601,6 +2602,7 @@ ${p}
     <button class="ty-tab ty-tab-reset" onclick="clearAnnotPanel()">Effacer</button>
     <button class="ty-tab ty-tab-close" onclick="closeAnnotPanel()">✕</button>
   </div>
+  <div id="annot-nearby-bar" style="display:none;align-items:center;gap:4px;padding:.3rem .5rem;border-bottom:1px solid var(--rule);background:var(--ui2);flex-wrap:wrap"></div>
   <div style="padding:.5rem .7rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
     <div style="display:flex;align-items:center;gap:.4rem">
       <span class="fl" style="margin:0">Taille (px)</span>
@@ -2655,6 +2657,7 @@ ${p}
     <button class="ty-tab ty-tab-reset" onclick="clearSecPanel()">Effacer</button>
     <button class="ty-tab ty-tab-close" onclick="closeSecPanel()">✕</button>
   </div>
+  <div id="sec-nearby-bar" style="display:none;align-items:center;gap:4px;padding:.3rem .5rem;border-bottom:1px solid var(--rule);background:var(--ui2);flex-wrap:wrap"></div>
   <div id="sec-tempo-row" style="display:none;padding:.4rem .7rem;gap:1rem;align-items:center;flex-wrap:wrap;border-bottom:1px solid var(--rule)">
     <div style="display:flex;align-items:center;gap:.4rem">
       <span class="fl" style="margin:0">BPM</span>
@@ -6189,11 +6192,10 @@ function renderSetlistTracks(){
     row.innerHTML=`
       <input type="checkbox" class="sme-merge-chk" data-idx="${i}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)">
       <span style="font-family:var(--font-mono);font-size:.6rem;color:var(--ink3);min-width:18px">${i+1}.</span>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--ink);
-          white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${track.title||'Sans titre'}</div>
-        <div style="font-family:var(--font-mono);font-size:.5rem;color:var(--ink3)">
-          ${track.data?.state?.song?.key||''} · ${track.data?.state?.song?.tempo||''} BPM · ${track.data?.state?.measures?.length||0} mes.</div>
+      <div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:.4rem">
+        <span style="font-family:var(--font-mono);font-size:.65rem;font-weight:700;color:var(--ink);
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${track.title||'Sans titre'}</span>
+        <span style="font-family:var(--font-mono);font-size:.5rem;color:var(--ink3);flex-shrink:0">${track.data?.state?.song?.tempo||''} BPM</span>
       </div>
       <button onclick="setlistLoadTrack(${i})" title="Ouvrir dans l'éditeur"
         style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 6px;cursor:pointer;color:var(--accent)">✎</button>
@@ -6278,6 +6280,11 @@ function _smeRowPointerUp(e){
       const [moved]=_setlistCurrent.tracks.splice(fromIdx,1);
       if(toIdx>fromIdx) toIdx--; // la suppression au-dessus décale les index qui suivent
       _setlistCurrent.tracks.splice(toIdx,0,moved);
+      // Enregistrement automatique après un glisser réussi (contrairement
+      // aux anciennes flèches, qui laissaient la sauvegarde manuelle).
+      _setlistCurrent.savedAt=Date.now();
+      localStorage.setItem(SETLIST_PREFIX+_setlistCurrent.id,JSON.stringify(_setlistCurrent));
+      _showSaveStatus('✓ Ordre enregistré');
     }
   }
   _smeCleanupDrag();
@@ -10248,6 +10255,51 @@ const resetRepeatColors=resetAllColors;
 function getComputedPx(varName){
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(varName))||null;
 }
+// Barre "signes proches" : quand plusieurs repères (section, annotation,
+// symboles, points d'orgue) se trouvent sur la même mesure, ils peuvent
+// être difficiles à distinguer au doigt tellement ils sont rapprochés
+// visuellement. Cette barre, affichée en haut de la modale d'édition,
+// propose de basculer directement vers l'un des autres repères de la même
+// mesure sans avoir à retaper précisément sur l'élément voulu à l'écran.
+// N'apparaît que s'il y a effectivement plus d'un repère à proposer.
+function renderNearbySigns(containerId, measIdx, currentType, currentKey){
+  const bar=document.getElementById(containerId);
+  if(!bar) return;
+  bar.innerHTML='';
+  const m=(measIdx!=null && measIdx>=0)?state.measures[measIdx]:null;
+  if(!m){ bar.style.display='none'; return; }
+  const items=[];
+  if(m.section) items.push({type:'section', key:null, label:'§ Section'});
+  if(m.annotation) items.push({type:'annotation', key:null, label:'📝 Annotation'});
+  (m.symbols||[]).forEach(s=>{
+    const names={'𝄋':'Segno','𝄌':'Coda','𝄐':'Pt. orgue','Fine':'Fine','D.C.':'D.C.','D.S.':'D.S.'};
+    items.push({type:'symbol', key:s, label:s+' '+(names[s]||'')});
+  });
+  (m.fermataSlots||[]).forEach(f=>{
+    const slot=_fSlotNum(f);
+    items.push({type:'fermata', key:slot, label:'𝄐 Pt. orgue #'+(slot+1)});
+  });
+  if(items.length<2){ bar.style.display='none'; return; } // rien "de proche" à proposer
+  bar.style.display='flex';
+  const label=document.createElement('span');
+  label.textContent='Signes proches :';
+  label.style.cssText='font-family:var(--font-mono);font-size:.52rem;color:var(--ink3);align-self:center;margin-right:.2rem';
+  bar.appendChild(label);
+  items.forEach(it=>{
+    const isCurrent=it.type===currentType && it.key===currentKey;
+    const btn=document.createElement('button');
+    btn.className='ty-tab';
+    btn.textContent=it.label;
+    btn.style.cssText='font-size:.55rem;padding:.15rem .4rem'+(isCurrent?';background:var(--accent);color:var(--acfg);border-color:var(--accent)':'');
+    btn.onclick=()=>{
+      if(it.type==='section') openSecPanel(measIdx);
+      else if(it.type==='annotation') openAnnotPanel(measIdx);
+      else if(it.type==='symbol') openSymEditor(measIdx,it.key);
+      else if(it.type==='fermata') openFermataEditor(measIdx,it.key);
+    };
+    bar.appendChild(btn);
+  });
+}
 // ════ ANNOTATION PANEL ════════════════════════════════════
 let _annotIdx=null, _annotAlign='left';
 function openAnnotPanel(idx){
@@ -10266,6 +10318,7 @@ function openAnnotPanel(idx){
   if(annotColorInp) annotColorInp.value=ao.color||getComputedStyle(document.documentElement).getPropertyValue('--ink2').trim()||'#5a5854';
   closeAllPanels();
   document.getElementById('annot-panel').style.display='block';
+  renderNearbySigns('annot-nearby-bar', idx, 'annotation', null);
   focusIfNotTouch(document.getElementById('annot-panel-inp'));
 }
 function annotSetAlign(a){ _annotAlign=a; annotHighlightAlign(a); applyAnnotPanel(); }
@@ -10337,6 +10390,7 @@ function openSecPanel(idx){
   secToggleTempo();
   closeAllPanels();
   document.getElementById('sec-panel').style.display='block';
+  renderNearbySigns('sec-nearby-bar', idx, 'section', null);
   focusIfNotTouch(document.getElementById('sec-panel-inp'));
 }
 function closeSecPanel(){ document.getElementById('sec-panel').style.display='none'; _secPanelIdx=null; }
@@ -16272,6 +16326,14 @@ function openFermataEditor(measIdx,slotIdx){
   if(symeColorInp) symeColorInp.value=inst.color||getComputedStyle(document.documentElement).getPropertyValue('--section-c').trim()||'#cc2200';
   const sp=document.getElementById('sym-panel');
   if(sp) sp.style.display='block';
+  // L'alignement gauche/centre/droite positionne une LIGNE de symboles —
+  // ça n'a pas de sens pour un point d'orgue individuel, ancré à une
+  // mesure précise (seul le décalage X/Y s'applique). On masque donc ces
+  // boutons plutôt que de les laisser cliquables sans effet.
+  ['syme-al-left','syme-al-center','syme-al-right'].forEach(id=>{
+    const b=document.getElementById(id); if(b) b.style.display='none';
+  });
+  renderNearbySigns('sym-nearby-bar', measIdx, 'fermata', slotIdx);
 }
 function openSymEditor(idx,s){
   closeAllPanels();
@@ -16292,11 +16354,15 @@ function openSymEditor(idx,s){
   }
   _symeAlign=off.align||'left';
   symeHighlightAlign(_symeAlign);
+  ['syme-al-left','syme-al-center','syme-al-right'].forEach(id=>{
+    const b=document.getElementById(id); if(b) b.style.display='';
+  });
   const symeColorInp=document.getElementById('syme-color');
   if(symeColorInp) symeColorInp.value=off.color||getComputedStyle(document.documentElement).getPropertyValue('--sym-c').trim()||'#cc2200';
   closeAllPanels();
   const sp=document.getElementById('sym-panel');
   if(sp) sp.style.display='block';
+  renderNearbySigns('sym-nearby-bar', idx, 'symbol', s);
 }
 function closeSymEditor(){
   document.getElementById('sym-panel').style.display='none';
