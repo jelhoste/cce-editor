@@ -3727,9 +3727,8 @@ ${p}
 
 <!-- ══ SETLIST EDITOR MODAL ══════════════════════════════ -->
 <div id="setlist-editor-modal" style="display:none;position:fixed;inset:0;z-index:930;
-  background:rgba(0,0,0,.45);align-items:center;justify-content:center">
-  <div style="background:var(--modal-bg);border-radius:calc(var(--r)*2);box-shadow:0 8px 40px rgba(0,0,0,.3);
-    width:min(820px,96vw);max-height:92vh;max-height:92dvh;overflow:hidden;display:flex;flex-direction:column">
+  background:var(--modal-bg);flex-direction:column">
+  <div style="width:min(820px,100%);margin:0 auto;height:100%;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column">
     <div style="display:flex;align-items:center;gap:.5rem;padding:.7rem 1rem;border-bottom:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap">
       <input type="text" id="setlist-name" placeholder="Nom du concert…"
         style="flex:1;font-family:var(--font-mono);font-size:.7rem;padding:.3rem .5rem;
