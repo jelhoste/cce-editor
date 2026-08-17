@@ -3729,7 +3729,7 @@ ${p}
 <div id="setlist-editor-modal" style="display:none;position:fixed;inset:0;z-index:930;
   background:rgba(0,0,0,.45);align-items:center;justify-content:center">
   <div style="background:var(--modal-bg);border-radius:calc(var(--r)*2);box-shadow:0 8px 40px rgba(0,0,0,.3);
-    width:min(560px,96vw);max-height:92vh;overflow:hidden;display:flex;flex-direction:column">
+    width:min(820px,96vw);max-height:92vh;max-height:92dvh;overflow:hidden;display:flex;flex-direction:column">
     <div style="display:flex;align-items:center;gap:.5rem;padding:.7rem 1rem;border-bottom:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap">
       <input type="text" id="setlist-name" placeholder="Nom du concert…"
         style="flex:1;font-family:var(--font-mono);font-size:.7rem;padding:.3rem .5rem;
@@ -3743,7 +3743,7 @@ ${p}
       <button class="tbtn" onclick="setlistSelectAllTracks(false)" style="font-size:.58rem">Aucun</button>
       <button class="tbtn" onclick="setlistMergeSelected()" style="font-size:.58rem" title="Concatène les morceaux cochés ci-dessous en un seul, à leur emplacement dans la liste">🔗 Fusionner la sélection</button>
     </div>
-    <div id="setlist-tracks" style="overflow-y:auto;flex:1;padding:.5rem .7rem;display:flex;flex-direction:column;gap:.3rem"></div>
+    <div id="setlist-tracks" style="overflow-y:auto;flex:1;padding:.5rem .7rem;column-gap:.5rem"></div>
     <div style="display:flex;gap:.5rem;padding:.6rem 1rem;border-top:1px solid var(--rule);flex-shrink:0;flex-wrap:wrap">
       <button class="tbtn" onclick="setlistSave()" style="font-size:.62rem;background:var(--accent);color:var(--acfg);border-color:var(--accent)">💾 Sauvegarder</button>
       <button class="tbtn" onclick="setlistExport()" style="font-size:.62rem">⬇ Exporter .json</button>
@@ -6171,6 +6171,7 @@ function renderSetlistList(){
 
 function renderSetlistTracks(){
   const container=document.getElementById('setlist-tracks');
+  container.style.columnCount='';
   container.innerHTML='';
   if(!_setlistCurrent?.tracks?.length){
     container.innerHTML=`<div style="font-family:var(--font-mono);font-size:.6rem;color:var(--ink3);text-align:center;padding:1.5rem">
@@ -6179,7 +6180,8 @@ function renderSetlistTracks(){
   }
   _setlistCurrent.tracks.forEach((track,i)=>{
     const row=document.createElement('div');
-    row.style.cssText=`display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;
+    row.style.cssText=`display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;margin-bottom:.3rem;
+      break-inside:avoid;-webkit-column-break-inside:avoid;
       border:1px solid var(--rule);border-radius:var(--r);background:var(--ui)`;
     row.innerHTML=`
       <input type="checkbox" class="sme-merge-chk" data-idx="${i}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;accent-color:var(--accent)">
@@ -6200,6 +6202,17 @@ function renderSetlistTracks(){
         style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 6px;cursor:pointer;color:var(--ink3)">✕</button>`;
     container.appendChild(row);
   });
+  // Une seule colonne tant que tout tient ; deux colonnes seulement si la
+  // liste dépasse la hauteur disponible — mesuré après construction, à
+  // partir de la hauteur réelle d'une ligne (même principe que le Reader).
+  const rows=container.children;
+  if(rows.length){
+    const rowH=rows[0].offsetHeight+5; // + marge basse
+    const availH=container.clientHeight||1;
+    const rowsPerCol=Math.max(1,Math.floor(availH/rowH));
+    const neededCols=rows.length>rowsPerCol?2:1;
+    container.style.columnCount=neededCols;
+  }
 }
 
 function setlistNew(){ closeSetlistModal(); openSetlistEditor(null); }
@@ -21762,7 +21775,11 @@ document.addEventListener('keydown',e=>{
   if(e.key==='n'&&!e.ctrlKey&&!e.metaKey){addMeasure();e.preventDefault()}
   if(e.key==='Escape'){closeChordPopup();sel=null;reflow()}
 });
-window.addEventListener('resize',()=>reflow());
+window.addEventListener('resize',()=>{
+  reflow();
+  const slModal=document.getElementById('setlist-editor-modal');
+  if(slModal && slModal.style.display!=='none') renderSetlistTracks();
+});
 window.addEventListener('beforeprint',()=>{
   closeAllModals();
   // NE PAS appeler setPrintMode/reflow ici — le CSS @media print gère l'impression
