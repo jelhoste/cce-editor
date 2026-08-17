@@ -1,14 +1,16 @@
 {
-  "name": "CCE Editor",
+  "name": "CCE — Chord Chart Editor",
   "short_name": "CCE Editor",
-  "description": "Éditeur de grilles d'accords, notation et paroles pour musiciens.",
+  "description": "Éditeur de grilles d'accords pour musiciens",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#f2efe8",
+  "background_color": "#1a2e52",
   "theme_color": "#1a2e52",
+  "lang": "fr",
   "icons": [
+    { "src": "icon-editor-180.png", "sizes": "180x180", "type": "image/png", "purpose": "any" },
     { "src": "icon-editor-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-editor-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icon-editor-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
