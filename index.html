@@ -1298,6 +1298,8 @@ textarea.fi{resize:vertical;min-height:40px}
 }
 .notpal-dot:hover { background:var(--ui2); }
 .notpal-dot input { cursor:pointer;accent-color:var(--accent);width:12px;height:12px; }
+.sme-row-dragging{box-shadow:0 10px 28px rgba(0,0,0,.4);cursor:grabbing;transition:box-shadow .15s}
+.sme-row-drop-target{outline:2px dashed var(--accent);outline-offset:2px}
 /* fin des styles */
 </style>
 <script>/*!
@@ -6179,6 +6181,7 @@ function renderSetlistTracks(){
   }
   _setlistCurrent.tracks.forEach((track,i)=>{
     const row=document.createElement('div');
+    row.dataset.idx=i;
     row.style.cssText=`display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;margin-bottom:.3rem;
       break-inside:avoid;-webkit-column-break-inside:avoid;
       border:1px solid var(--rule);border-radius:var(--r);background:var(--ui)`;
@@ -6193,13 +6196,15 @@ function renderSetlistTracks(){
       </div>
       <button onclick="setlistLoadTrack(${i})" title="Ouvrir dans l'éditeur"
         style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 6px;cursor:pointer;color:var(--accent)">✎</button>
-      <button onclick="setlistMoveTrack(${i},-1)" ${i===0?'disabled':''} title="Monter"
-        style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 5px;cursor:pointer;color:var(--ink3)">↑</button>
-      <button onclick="setlistMoveTrack(${i},1)" ${i===_setlistCurrent.tracks.length-1?'disabled':''} title="Descendre"
-        style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 5px;cursor:pointer;color:var(--ink3)">↓</button>
+      <span class="sme-drag-handle" title="Maintenir pour réordonner" style="flex-shrink:0;font-size:1rem;line-height:1;
+        color:var(--ink3);padding:.3rem .4rem;cursor:grab;touch-action:none;
+        -webkit-touch-callout:none;-webkit-user-select:none;user-select:none">⠿</span>
       <button onclick="setlistRemoveTrack(${i})" title="Retirer"
         style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 6px;cursor:pointer;color:var(--ink3)">✕</button>`;
     container.appendChild(row);
+    const handle=row.querySelector('.sme-drag-handle');
+    handle.addEventListener('pointerdown',e=>_smeRowPointerDown(e,i,row));
+    handle.addEventListener('contextmenu',e=>e.preventDefault());
   });
   // Une seule colonne tant que tout tient ; deux colonnes seulement si la
   // liste dépasse la hauteur disponible — mesuré après construction, à
@@ -6212,6 +6217,91 @@ function renderSetlistTracks(){
     const neededCols=rows.length>rowsPerCol?2:1;
     container.style.columnCount=neededCols;
   }
+}
+
+// ── Glisser-déposer (armé par appui long) pour réordonner la setlist ──
+// Remplace les anciennes flèches ▲▼. Reprend telle quelle la mécanique
+// éprouvée sur le Reader : la poignée porte touch-action:none dès sa
+// création (un changement fait après coup, une fois le geste commencé,
+// n'est pas toujours pris en compte par le navigateur) ; le pointeur n'est
+// capturé qu'au moment où le glisser s'arme (pas dès qu'on pose le doigt),
+// pour ne jamais gêner le défilement normal avant ce moment ; la cible de
+// dépôt est déterminée par la position réelle à l'écran, donc fonctionne
+// aussi bien en une qu'en deux colonnes.
+let _smeDrag=null;
+const SME_DRAG_HOLD_MS=400;
+const SME_DRAG_SLOP_PX=10;
+
+function _smeRowPointerDown(e,i,row){
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  _smeDrag={idx:i, row, armed:false, startX:e.clientX, startY:e.clientY, dropTarget:null, timer:null, pointerId:e.pointerId};
+  _smeDrag.timer=setTimeout(()=>_smeArmDrag(),SME_DRAG_HOLD_MS);
+  row.addEventListener('pointermove',_smeRowPointerMove);
+  row.addEventListener('pointerup',_smeRowPointerUp);
+  row.addEventListener('pointercancel',_smeRowPointerUp);
+}
+function _smeArmDrag(){
+  if(!_smeDrag) return;
+  _smeDrag.armed=true;
+  _smeDrag.row.classList.add('sme-row-dragging');
+  _smeDrag.row.style.zIndex='10';
+  try{ _smeDrag.row.setPointerCapture(_smeDrag.pointerId); }catch(err){}
+  if(navigator.vibrate){ try{ navigator.vibrate(15); }catch(err){} }
+}
+function _smeRowPointerMove(e){
+  if(!_smeDrag) return;
+  const dx=e.clientX-_smeDrag.startX, dy=e.clientY-_smeDrag.startY;
+  if(!_smeDrag.armed){
+    if(Math.abs(dx)>SME_DRAG_SLOP_PX||Math.abs(dy)>SME_DRAG_SLOP_PX){
+      clearTimeout(_smeDrag.timer);
+      _smeCleanupDrag();
+    }
+    return;
+  }
+  e.preventDefault();
+  _smeDrag.row.style.transform=`translate(${dx}px,${dy}px) scale(1.03)`;
+  const target=_smeFindDropTarget(e.clientX,e.clientY);
+  document.querySelectorAll('#setlist-tracks > div[data-idx]').forEach(r=>r.classList.remove('sme-row-drop-target'));
+  if(target && target!==_smeDrag.row) target.classList.add('sme-row-drop-target');
+  _smeDrag.dropTarget=target;
+}
+function _smeRowPointerUp(e){
+  if(!_smeDrag) return;
+  clearTimeout(_smeDrag.timer);
+  if(_smeDrag.armed){
+    e.preventDefault();
+    const dropTarget=_smeDrag.dropTarget;
+    if(dropTarget && dropTarget!==_smeDrag.row){
+      const fromIdx=_smeDrag.idx;
+      const toIdx=parseInt(dropTarget.dataset.idx);
+      const [moved]=_setlistCurrent.tracks.splice(fromIdx,1);
+      _setlistCurrent.tracks.splice(toIdx,0,moved);
+    }
+  }
+  _smeCleanupDrag();
+  renderSetlistTracks();
+}
+function _smeFindDropTarget(x,y){
+  const rows=document.querySelectorAll('#setlist-tracks > div[data-idx]');
+  for(const r of rows){
+    if(r===_smeDrag.row) continue;
+    const rect=r.getBoundingClientRect();
+    if(x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom) return r;
+  }
+  return null;
+}
+function _smeCleanupDrag(){
+  if(_smeDrag){
+    if(_smeDrag.armed){ try{ _smeDrag.row.releasePointerCapture(_smeDrag.pointerId); }catch(err){} }
+    _smeDrag.row.removeEventListener('pointermove',_smeRowPointerMove);
+    _smeDrag.row.removeEventListener('pointerup',_smeRowPointerUp);
+    _smeDrag.row.removeEventListener('pointercancel',_smeRowPointerUp);
+    _smeDrag.row.style.transform='';
+    _smeDrag.row.style.zIndex='';
+    _smeDrag.row.classList.remove('sme-row-dragging');
+  }
+  document.querySelectorAll('#setlist-tracks > div[data-idx]').forEach(r=>r.classList.remove('sme-row-drop-target'));
+  _smeDrag=null;
 }
 
 function setlistNew(){ closeSetlistModal(); openSetlistEditor(null); }
