@@ -1299,7 +1299,8 @@ textarea.fi{resize:vertical;min-height:40px}
 .notpal-dot:hover { background:var(--ui2); }
 .notpal-dot input { cursor:pointer;accent-color:var(--accent);width:12px;height:12px; }
 .sme-row-dragging{box-shadow:0 10px 28px rgba(0,0,0,.4);cursor:grabbing;transition:box-shadow .15s}
-.sme-row-drop-target{outline:2px dashed var(--accent);outline-offset:2px}
+.sme-insert-before{border-top:3px solid var(--accent)!important}
+.sme-insert-after{border-bottom:3px solid var(--accent)!important}
 /* fin des styles */
 </style>
 <script>/*!
@@ -6196,11 +6197,11 @@ function renderSetlistTracks(){
       </div>
       <button onclick="setlistLoadTrack(${i})" title="Ouvrir dans l'éditeur"
         style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 6px;cursor:pointer;color:var(--accent)">✎</button>
+      <button onclick="setlistRemoveTrack(${i})" title="Retirer"
+        style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 6px;cursor:pointer;color:var(--ink3)">✕</button>
       <span class="sme-drag-handle" title="Maintenir pour réordonner" style="flex-shrink:0;font-size:1rem;line-height:1;
         color:var(--ink3);padding:.3rem .4rem;cursor:grab;touch-action:none;
-        -webkit-touch-callout:none;-webkit-user-select:none;user-select:none">⠿</span>
-      <button onclick="setlistRemoveTrack(${i})" title="Retirer"
-        style="font-size:.65rem;background:none;border:1px solid var(--rule2);border-radius:var(--r);padding:2px 6px;cursor:pointer;color:var(--ink3)">✕</button>`;
+        -webkit-touch-callout:none;-webkit-user-select:none;user-select:none">⠿</span>`;
     container.appendChild(row);
     const handle=row.querySelector('.sme-drag-handle');
     handle.addEventListener('pointerdown',e=>_smeRowPointerDown(e,i,row));
@@ -6260,33 +6261,40 @@ function _smeRowPointerMove(e){
   }
   e.preventDefault();
   _smeDrag.row.style.transform=`translate(${dx}px,${dy}px) scale(1.03)`;
-  const target=_smeFindDropTarget(e.clientX,e.clientY);
-  document.querySelectorAll('#setlist-tracks > div[data-idx]').forEach(r=>r.classList.remove('sme-row-drop-target'));
-  if(target && target!==_smeDrag.row) target.classList.add('sme-row-drop-target');
-  _smeDrag.dropTarget=target;
+  const drop=_smeFindDropTarget(e.clientX,e.clientY);
+  document.querySelectorAll('#setlist-tracks > div[data-idx]').forEach(r=>r.classList.remove('sme-insert-before','sme-insert-after'));
+  if(drop) drop.row.classList.add(drop.before?'sme-insert-before':'sme-insert-after');
+  _smeDrag.drop=drop;
 }
 function _smeRowPointerUp(e){
   if(!_smeDrag) return;
   clearTimeout(_smeDrag.timer);
   if(_smeDrag.armed){
     e.preventDefault();
-    const dropTarget=_smeDrag.dropTarget;
-    if(dropTarget && dropTarget!==_smeDrag.row){
+    const drop=_smeDrag.drop;
+    if(drop && drop.row!==_smeDrag.row){
       const fromIdx=_smeDrag.idx;
-      const toIdx=parseInt(dropTarget.dataset.idx);
+      let toIdx=parseInt(drop.row.dataset.idx)+(drop.before?0:1);
       const [moved]=_setlistCurrent.tracks.splice(fromIdx,1);
+      if(toIdx>fromIdx) toIdx--; // la suppression au-dessus décale les index qui suivent
       _setlistCurrent.tracks.splice(toIdx,0,moved);
     }
   }
   _smeCleanupDrag();
   renderSetlistTracks();
 }
+// Renvoie {row, before} : before=true si le point est dans la moitié
+// supérieure de la ligne visée (insertion AU-DESSUS), false si dans la
+// moitié inférieure (insertion EN DESSOUS) — matérialisé par une ligne
+// horizontale entre deux morceaux, à l'endroit précis de l'insertion.
 function _smeFindDropTarget(x,y){
   const rows=document.querySelectorAll('#setlist-tracks > div[data-idx]');
   for(const r of rows){
     if(r===_smeDrag.row) continue;
     const rect=r.getBoundingClientRect();
-    if(x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom) return r;
+    if(x>=rect.left && x<=rect.right && y>=rect.top && y<=rect.bottom){
+      return {row:r, before:(y-rect.top)<rect.height/2};
+    }
   }
   return null;
 }
@@ -6300,7 +6308,7 @@ function _smeCleanupDrag(){
     _smeDrag.row.style.zIndex='';
     _smeDrag.row.classList.remove('sme-row-dragging');
   }
-  document.querySelectorAll('#setlist-tracks > div[data-idx]').forEach(r=>r.classList.remove('sme-row-drop-target'));
+  document.querySelectorAll('#setlist-tracks > div[data-idx]').forEach(r=>r.classList.remove('sme-insert-before','sme-insert-after'));
   _smeDrag=null;
 }
 
