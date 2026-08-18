@@ -2628,6 +2628,10 @@ ${p}
         <button class="step-btn right" onclick="stepVal('annot-oy',1,applyAnnotPanel)">+</button>
       </div>
     </div>
+    <label style="display:flex;align-items:center;gap:.3rem;cursor:pointer">
+      <input type="checkbox" id="annot-overflow" onchange="applyAnnotPanel()" style="width:16px;height:16px;cursor:pointer">
+      <span class="fl" style="margin:0" title="Le texte tient sur une seule ligne et déborde visuellement sur les mesures suivantes, au lieu de revenir à la ligne dans la largeur de cette seule mesure">Déborder sur les mesures suivantes</span>
+    </label>
   </div>
 </div>
 
@@ -3578,6 +3582,7 @@ ${p}
     <button class="tbtn" style="margin-left:auto" onclick="clearPedLine()">🗑</button>
     <button class="tbtn pri" onclick="closePedLineModal()">✓</button>
   </div>
+  <div id="pedline-nearby-bar" style="display:none;align-items:center;gap:4px;padding:.3rem .5rem;border-bottom:1px solid var(--rule);background:var(--ui2);flex-wrap:wrap"></div>
 </div>
 <!-- ── Bottom sheet symboles ── -->
 <div id="sym-sheet-overlay" style="display:none;position:fixed;inset:0;z-index:810;background:rgba(0,0,0,.35)" onclick="closeSymSheet()"></div>
@@ -10283,6 +10288,7 @@ function renderNearbySigns(containerId, measIdx, currentType, currentKey){
   const items=[];
   if(m.section) items.push({type:'section', key:null, label:'§ Section'});
   if(m.annotation) items.push({type:'annotation', key:null, label:'📝 Annotation'});
+  if(m.pedLine) items.push({type:'pedline', key:null, label:'╌ '+(m.pedLine.text||'Ligne')});
   (m.symbols||[]).forEach(s=>{
     const names={'𝄋':'Segno','𝄌':'Coda','𝄐':'Pt. orgue','Fine':'Fine','D.C.':'D.C.','D.S.':'D.S.'};
     items.push({type:'symbol', key:s, label:s+' '+(names[s]||'')});
@@ -10306,6 +10312,7 @@ function renderNearbySigns(containerId, measIdx, currentType, currentKey){
     btn.onclick=()=>{
       if(it.type==='section') openSecPanel(measIdx);
       else if(it.type==='annotation') openAnnotPanel(measIdx);
+      else if(it.type==='pedline'){ select(measIdx); openPedLineModal(); }
       else if(it.type==='symbol') openSymEditor(measIdx,it.key);
       else if(it.type==='fermata') openFermataEditor(measIdx,it.key);
     };
@@ -10328,6 +10335,8 @@ function openAnnotPanel(idx){
   annotHighlightAlign(_annotAlign);
   const annotColorInp=document.getElementById('annot-color');
   if(annotColorInp) annotColorInp.value=ao.color||getComputedStyle(document.documentElement).getPropertyValue('--ink2').trim()||'#5a5854';
+  const overflowChk=document.getElementById('annot-overflow');
+  if(overflowChk) overflowChk.checked=!!ao.overflow;
   closeAllPanels();
   document.getElementById('annot-panel').style.display='block';
   renderNearbySigns('annot-nearby-bar', idx, 'annotation', null);
@@ -10353,6 +10362,7 @@ function applyAnnotPanel(){
     offsetX:parseFloat(document.getElementById('annot-ox')?.value)||0,
     offsetY:parseFloat(document.getElementById('annot-oy')?.value)||0,
     color:document.getElementById('annot-color')?.value||null,
+    overflow:document.getElementById('annot-overflow')?.checked||false,
   };
   const inp=document.getElementById('annot-inp'); if(inp) inp.value=text;
   reflow();
@@ -17969,6 +17979,7 @@ function reflow(){
           if(ao.align) a.style.textAlign=ao.align;
           if(ao.color) a.style.color=ao.color;
           if(ao.offsetX||ao.offsetY) a.style.transform=`translate(${ao.offsetX||0}px,${ao.offsetY||0}px)`;
+          if(ao.overflow){ a.style.whiteSpace='nowrap'; a.style.zIndex='6'; a.style.width='max-content'; }
           a.style.cursor='text';a.title='Cliquer pour modifier';
           a.addEventListener('click',e=>{e.stopPropagation();if(_multiMode){toggleMultiSel(idx);return;}select(idx);openAnnotPanel(idx);});
           ov.appendChild(a);
@@ -19927,6 +19938,7 @@ function openPedLineModal(){
   const plColorInp=document.getElementById('pl-color');
   if(plColorInp) plColorInp.value=pl.color||getComputedStyle(document.documentElement).getPropertyValue('--ped-c').trim()||'#cc2200';
   document.getElementById('pedline-modal').style.display='block';
+  renderNearbySigns('pedline-nearby-bar', sel, 'pedline', null);
 }
 function closePedLineModal(){
   document.getElementById('pedline-modal').style.display='none';
