@@ -2817,6 +2817,18 @@ ${p}
     <button class="ty-tab ty-tab-reset" onclick="removeNotation()" title="Supprimer la zone notation">🗑</button>
     <button class="ty-tab ty-tab-close" style="margin-left:auto;flex-shrink:0" onclick="closeNotationPanel()">✕</button>
   </div>
+  <div class="notbar" style="flex-wrap:wrap;background:var(--ui2);border-bottom:1px solid var(--rule)">
+    <span class="notbar-lbl">Simile</span>
+    <button class="ty-tab" onclick="setNotationSimile(1)" title="Répète la mesure précédente (signe simple)">𝄎</button>
+    <button class="ty-tab" onclick="setNotationSimile(2)" title="Répète les 2 mesures précédentes (occupe 2 mesures)">𝄎𝄎</button>
+    <button class="ty-tab ty-tab-reset" onclick="clearNotationSimile()" title="Revenir à une notation normale (redonne l'accès aux notes)">✕ Simile</button>
+    <span class="notbar-sep"></span>
+    <button class="ty-tab" onclick="notationCopy()" title="Copier cette zone de notation">📋 Copier</button>
+    <button class="ty-tab" onclick="notationPasteNext()" title="Coller sur la mesure suivante, et continuer l'édition là-bas (pratique pour coller plusieurs fois de suite)">📥 Coller →</button>
+    <span class="notbar-lbl">sur</span>
+    <input type="number" id="notation-paste-n" value="2" min="1" max="20" class="notbar-num">
+    <button class="ty-tab" onclick="notationPasteN()" title="Colle sur N mesures suivantes en une seule fois">📥 Coller ×N</button>
+  </div>
 
   <!-- Onglet Rythme -->
   <div id="not-sec-rhythm">
@@ -10495,6 +10507,121 @@ function toggleNotVoice(){
   const btn=document.getElementById('not-voice-btn');
   if(btn) btn.textContent = _notVoice===2 ? 'V2 ↓' : 'V1 ↑';
 }
+// ════ NOTATION : copier / coller ════════════════════════════════
+// Copie profonde : jamais de référence partagée entre la mesure source et
+// les mesures collées. Le simile n'est jamais copié (voir notationCopy) :
+// coller doit toujours donner de vraies notes, un simile n'a de sens que
+// juste après la notation qu'il répète, pas ailleurs.
+let _notationClipboard=null;
+function notationCopy(){
+  if(_notEditIdx===null) return;
+  const m=state.measures[_notEditIdx];
+  if(!m || !m.notation){ alert('Rien à copier sur cette mesure.'); return; }
+  _notationClipboard=JSON.parse(JSON.stringify(m.notation));
+  delete _notationClipboard.simile;
+  _showSaveStatus('✓ Notation copiée');
+}
+function notationPasteNext(){
+  if(!_notationClipboard){ alert('Copie d\'abord une zone de notation (bouton Copier).'); return; }
+  if(_notEditIdx===null) return;
+  const m=state.measures[_notEditIdx];
+  const span=(m&&m.notation&&m.notation.span)||1;
+  const targetIdx=_notEditIdx+span;
+  if(targetIdx>=state.measures.length){ alert('Pas de mesure suivante disponible.'); return; }
+  state.measures[targetIdx].notation=JSON.parse(JSON.stringify(_notationClipboard));
+  reflow();
+  // Déplace le point d'édition sur la mesure qu'on vient de coller, pour
+  // pouvoir recoller à la suite d'un simple clic répété.
+  select(targetIdx);
+  openNotationPanel();
+  _showSaveStatus('✓ Notation collée');
+}
+function notationPasteN(){
+  if(!_notationClipboard){ alert('Copie d\'abord une zone de notation (bouton Copier).'); return; }
+  if(_notEditIdx===null) return;
+  const n=Math.max(1,parseInt(document.getElementById('notation-paste-n')?.value)||1);
+  const m=state.measures[_notEditIdx];
+  const span=(m&&m.notation&&m.notation.span)||1;
+  const pasteSpan=_notationClipboard.span||1;
+  let idx=_notEditIdx+span, count=0;
+  while(count<n && idx<state.measures.length){
+    state.measures[idx].notation=JSON.parse(JSON.stringify(_notationClipboard));
+    idx+=pasteSpan; count++;
+  }
+  reflow();
+  if(count<n) alert('Collé sur '+count+' mesure'+(count>1?'s':'')+' seulement — la fin de la grille a été atteinte.');
+  else _showSaveStatus('✓ Collé sur '+count+' mesure'+(count>1?'s':''));
+}
+
+// ════ NOTATION : simile / double simile ═════════════════════════
+// Marque la zone de notation actuelle comme "pareil qu'avant" (simile=1,
+// une mesure) ou "pareil que les 2 mesures précédentes" (simile=2, occupe
+// alors 2 mesures — span est réglé en conséquence). Champ additionnel :
+// un fichier ouvert avec un ancien CCE Editor ignore simplement ce champ
+// et affiche les notes normalement si jamais il y en avait — et un fichier
+// SANS ce champ (tout l'existant) s'affiche exactement comme avant, aucune
+// zone de notation existante n'est affectée par cet ajout.
+function setNotationSimile(n){
+  if(_notEditIdx===null) return;
+  const m=state.measures[_notEditIdx];
+  if(!m.notation) initRhythmNotation(_notEditIdx);
+  m.notation.simile=n;
+  m.notation.span=n;
+  reflow();
+  const spanInp=document.getElementById('not-span-val');
+  if(spanInp) spanInp.value=m.notation.span;
+  _showSaveStatus('✓ Simile '+(n===2?'double':'simple')+' appliqué');
+}
+function clearNotationSimile(){
+  if(_notEditIdx===null) return;
+  const m=state.measures[_notEditIdx];
+  if(m.notation) delete m.notation.simile;
+  reflow();
+  _showSaveStatus('✓ Retour à la notation normale');
+}
+// Dessin partagé du signe simile pour les zones de notation — reprend
+// exactement le même tracé (barre oblique + points) que le simile des
+// grilles d'accords, en SVG pur (jamais de foreignObject), pour rester
+// pleinement compatible avec l'export et l'impression.
+// Reprend EXACTEMENT les coordonnées du glyphe simile des grilles d'accords
+// (_similesvg, viewBox 60×60, centré sur 30,30) via un <g transform>, plutôt
+// que de recalculer chaque point à la main — élimine tout risque d'erreur
+// de tracé et garantit un rendu identique à l'original.
+function _drawSimileGlyphAt(g, cx, cy, scale, dbl, col){
+  col=col||'var(--ink)';
+  const wrap=svgEl('g',{transform:`translate(${cx},${cy}) scale(${scale}) translate(-30,-30)`});
+  g.appendChild(wrap);
+  const r=3.8;
+  const mkSlash=(dx)=>svgEl('polygon',{points:
+    `${45.5+dx},10 ${54.5+dx},10 ${14.5+dx},50 ${5.5+dx},50`, fill:col});
+  if(dbl){
+    wrap.appendChild(svgEl('circle',{cx:18,cy:18,r,fill:col}));
+    wrap.appendChild(svgEl('circle',{cx:42,cy:42,r,fill:col}));
+    wrap.appendChild(mkSlash(-7));
+    wrap.appendChild(mkSlash(7));
+  } else {
+    wrap.appendChild(svgEl('circle',{cx:19,cy:19,r,fill:col}));
+    wrap.appendChild(svgEl('circle',{cx:41,cy:41,r,fill:col}));
+    wrap.appendChild(mkSlash(0));
+  }
+}
+// Point d'entrée commun : dessine le simile à l'échelle "scale"
+// (proportionnelle à la taille normale d'une portée pour ce type de
+// notation) — réduite à 52% pour cet usage précis (zones de notation),
+// sans toucher à la taille du simile des grilles d'accords, réglée
+// séparément (--simile-size). Simple : centré dans la mesure. Double :
+// placé à la toute fin de la mesure (donc à la frontière avec la mesure
+// suivante qu'il répète aussi), W représentant la largeur d'une seule
+// mesure, pas des deux combinées.
+const NOTATION_SIMILE_SCALE=0.52;
+function renderNotationSimile(svg, m, W, cy, scale){
+  const g=svgEl('g',{'pointer-events':'none'});
+  svg.appendChild(g);
+  const dbl=m.notation.simile===2;
+  const cx=dbl?W:W/2;
+  _drawSimileGlyphAt(g, cx, cy, (scale||1)*NOTATION_SIMILE_SCALE, dbl, 'var(--ink)');
+  return g;
+}
 // ════ NOTATION PANEL ══════════════════════════════════════════
 function openNotationPanel(){
   closeAllPanels();
@@ -12214,6 +12341,7 @@ function renderDrumsInto(svg,m,W,interactive,zoom,showClef=true,SP=1.0){
   const minLP=drumMinLP(m);
   const maxLP=drumMaxLP(m);
   const H=drumStaffH(zoom,zoom?null:minLP,zoom?null:maxLP);
+  if(n.simile){ renderNotationSimile(svg,m,W,H/2,lg/9); return; }
   const NR=drumNR(zoom);
   const STEM_LEN=3.5*lg;
   const slots=n.slots||[];
@@ -12814,6 +12942,7 @@ function renderTrebleInto(parent, m, W, selectable, CY, LG, startX, nr, spacingS
   const n=m.notation; if(!n) return;
   const LG_REF=12;
   const scale=LG/LG_REF;
+  if(n.simile){ renderNotationSimile(parent,m,W,CY,scale); return; }
   const NR=(nr||5)*scale;
   const SP=spacingScale||1.0;
   const slots=n.slots||[];
@@ -14777,6 +14906,7 @@ function renderRhythmInto(svg, m, W, interactive){
   const NOTE_Y=Math.round(38*_rsc);
   const STEM_DOWN=NOTE_Y+Math.round(26*_rsc); // bout de hampe bas + marge
   const H=Math.max(Math.round(NOTATION_H.rhythm*_rsc), STEM_DOWN+2);
+  if(n.simile){ renderNotationSimile(svg,m,W,H/2,_rsc); return; }
   const STEM_UP=NOTE_Y-Math.round(24*_rsc);
   const NR=Math.round(5*_rsc);
   const slots=n.slots||[];
@@ -15614,6 +15744,7 @@ function renderTabInto(parent, m, W, interactive, type, SP=1.0, lgOverride=null,
   const lg=lgOverride!==null?lgOverride:tabLGval(type);
   const nStr=tabStringCount(type);
   const H=tabStaffH(lg,nStr);
+  if(n.simile){ renderNotationSimile(parent,m,W,H/2,lg/9); return; }
   const slots=n.slots||[];
   const nSlots=slots.length||(n.beats||4);
   const CLEF_W=interactive?22:16;
