@@ -1343,6 +1343,7 @@ ${p}
 </script>
 </head>
 <body data-theme="light">
+<script>try{var _dt=localStorage.getItem('cce-device-theme'); if(_dt) document.body.dataset.theme=_dt;}catch(e){}</script>
 
 <!-- ══ TOPBAR ══════════════════════════════════════════ -->
 <div id="topbar">
@@ -4103,6 +4104,7 @@ document.addEventListener('click',e=>{
 // ════ THEME ══════════════════════════════════════════════
 function setTheme(t){
   document.body.dataset.theme=t;
+  try{ localStorage.setItem('cce-device-theme',t); }catch(e){}
   ['light','dark','hc'].forEach(x=>{
     const el=document.getElementById('dd-'+x);
     if(el) el.style.fontWeight=x===t?'700':'400';
@@ -20476,7 +20478,7 @@ function _buildSaveData(){
    'ty-chord-ls','ty-chord-sup','ty-chord-sup-a','ty-chord-bass','s-phtag-scale',
   ].forEach(id=>{ const el=document.getElementById(id); if(el) typoInputs[id]=el.value; });
   typoInputs['ty-print-slot-bar']=document.getElementById('ty-print-slot-bar')?.checked||false;
-  return {state,fmt:currentFmt,screenFmt,printFmt,customFmtW:FORMATS.custom?.[0],customFmtH:FORMATS.custom?.[1],theme:document.body.dataset.theme,typo,sliders,notation,typoInputs,alignMode,widthFactors,versions,currentVersionId,lyricsSplitView:_lyricsSplitView,savedAt:Date.now()};
+  return {state,fmt:currentFmt,screenFmt,printFmt,customFmtW:FORMATS.custom?.[0],customFmtH:FORMATS.custom?.[1],typo,sliders,notation,typoInputs,alignMode,widthFactors,versions,currentVersionId,lyricsSplitView:_lyricsSplitView,savedAt:Date.now()};
 }
 
 function _restoreData(data){
@@ -20504,7 +20506,10 @@ function _restoreData(data){
   if(data.versions){ versions=data.versions; currentVersionId=data.currentVersionId||null; }
   else { versions=[]; currentVersionId=null; }
   if(data.lyricsSplitView!=null) _lyricsSplitView=!!data.lyricsSplitView;
-  if(data.theme) setTheme(data.theme);
+  // Le thème n'est plus lié au morceau : c'est un réglage de l'appareil
+  // (voir setTheme, persisté dans localStorage['cce-device-theme']) —
+  // un champ "theme" présent dans d'anciens fichiers est ignoré ici
+  // volontairement, pour ne jamais changer le thème en changeant de morceau.
   // Remet chaque réglage personnalisable à sa valeur par défaut AVANT
   // d'appliquer celles du morceau chargé — sinon un réglage jamais
   // personnalisé sur ce morceau hériterait silencieusement de la valeur
